@@ -12,7 +12,7 @@ public class PointerController : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		polygon = GameObject.Find ("TestPolygon").transform;
+		polygon = GameObject.Find ("PlayerPolygon").transform;
 		//mainCam = GameObject.Find ("Main Camera").GetComponent<Camera> ();
 		polygonScript = polygon.GetComponent<TestPolygon>();
 		highlightGO = transform.Find ("Highlighter").gameObject;
@@ -22,7 +22,7 @@ public class PointerController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		//the higher the polygon's z value, the farther it is from the camera
-		zDepth = polygon.position.z + 10;
+		zDepth = polygon.position.z + 3;
 		Vector3 mousePos = Input.mousePosition;
 		mousePos.z = zDepth;
 		mousePos = Camera.main.ScreenToWorldPoint (mousePos);
@@ -48,7 +48,7 @@ public class PointerController : MonoBehaviour {
 	void OnMouseDown(){
 		//if highlighter is highlighting something
 		//remove the vertex its highlighting
-		if (highlightedOne) {
+		if (highlightedOne && polygonScript.verticesList.Count > 3) {
 			Debug.Log ("clicked while highlighted");
 
 			polygonScript.RemoveVertex(highlightGO.GetComponent<HighlightVertex>().removalIndex);

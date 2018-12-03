@@ -11,7 +11,7 @@ public class HighlightVertex : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		polygon = GameObject.FindObjectOfType<TestPolygon> ();	
+		polygon = GameObject.Find("PlayerPolygon").GetComponent<TestPolygon> ();	
 	}
 	
 	// Update is called once per frame
