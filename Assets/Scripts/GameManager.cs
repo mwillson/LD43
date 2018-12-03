@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 using cakeslice;
 
 public class GameManager : MonoBehaviour {
@@ -27,8 +29,15 @@ public class GameManager : MonoBehaviour {
 
 	public bool cameraWait = false;
 
+	[SerializeField]
+	public Image healthBar;
+	public float currHealth, newHealth, t;
+
 	// Use this for initialization
 	void Start () {
+		currHealth = 1f;
+		newHealth = 1f;
+		t = 0f;
 		wallPlane = GameObject.Find ("Wall").transform.Find ("Plane");
 		animDone = false;
 		smallBeat = false;
@@ -70,7 +79,11 @@ public class GameManager : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		RenderSettings.skybox.SetFloat ("_Rotation", (Mathf.Abs(Mathf.Cos ((Time.time % 10)) * 10)  + 5));
-	
+		if (currHealth != newHealth) {
+			currHealth = Mathf.Lerp (currHealth, newHealth, t);
+			healthBar.fillAmount = currHealth;
+			t += .5f * Time.deltaTime; 
+		}
 	}
 
 	void FixedUpdate(){
@@ -100,7 +113,6 @@ public class GameManager : MonoBehaviour {
 	}
 
 	public void CreateHole(){
-
 		if(GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> () != null)
 			Destroy (GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> ().gameObject);
 		GameObject.FindObjectOfType<Wall> ().CreateHoleShape (currentPoly.verticesList);
@@ -153,22 +165,24 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Success!");
 		//outline the mesh please
 		bool outEnab = true;
-		currentPoly.GetComponent<Outline>().enabled = true;
+		currentPoly.GetComponent<cakeslice.Outline>().enabled = true;
 		float i = 0f;
 		while (i < .6f) {
 			i += .05f;
 			outEnab = !outEnab;
-			currentPoly.GetComponent<Outline> ().enabled = outEnab;
+			currentPoly.GetComponent<cakeslice.Outline> ().enabled = outEnab;
 			yield return new WaitForSeconds (.05f);
 		}
 
-		currentPoly.GetComponent<Outline>().enabled = false;
+		currentPoly.GetComponent<cakeslice.Outline>().enabled = false;
 		animDone = true;
 	}
 
 
 	IEnumerator FailAnim(){
 		Debug.Log ("Fail");
+		HealthDrop ();
+
 		currentPoly.color = Color.grey;
 		currentPoly.ReDraw ();
 		GameObject.FindObjectOfType<CameraControl> ().ScreenShake (.2f, 0f, .06f);
@@ -189,6 +203,13 @@ public class GameManager : MonoBehaviour {
 		}
 		currentPoly.transform.position = originalPos;
 		animDone = true;
+	}
+
+	void HealthDrop(){
+		t = 0f;
+		float failDrop = .1f;
+		newHealth = currHealth - failDrop;
+
 	}
 
 	public void CreateNewPlayerPolygon(){
