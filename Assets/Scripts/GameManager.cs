@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 using cakeslice;
 
@@ -33,8 +34,17 @@ public class GameManager : MonoBehaviour {
 	public Image healthBar;
 	public float currHealth, newHealth, t;
 
+	[SerializeField]
+	Text chainText;
+
+	int score, chainAmt, levelThreshold, chainThreshold;
+
 	// Use this for initialization
 	void Start () {
+		score = 0;
+		chainAmt = 0;
+		chainThreshold = 5;
+		levelThreshold = 30;
 		currHealth = 1f;
 		newHealth = 1f;
 		t = 0f;
@@ -163,6 +173,15 @@ public class GameManager : MonoBehaviour {
 
 	IEnumerator SuccessAnim(){
 		Debug.Log ("Success!");
+		score += 1;
+		chainAmt += 1;
+		if (chainAmt >= chainThreshold) {
+			HealthDrop (.1f);
+			chainAmt = 0;
+		}
+		chainText.text = "Chain: x" + chainAmt;
+		if (score >= levelThreshold)
+			GoToNextLevel ();
 		//outline the mesh please
 		bool outEnab = true;
 		currentPoly.GetComponent<cakeslice.Outline>().enabled = true;
@@ -178,11 +197,15 @@ public class GameManager : MonoBehaviour {
 		animDone = true;
 	}
 
+	void GoToNextLevel(){
+
+	}
 
 	IEnumerator FailAnim(){
 		Debug.Log ("Fail");
-		HealthDrop ();
-
+		HealthDrop (-.1f);
+		chainAmt = 0;
+		chainText.text = "Chain: x0";
 		currentPoly.color = Color.grey;
 		currentPoly.ReDraw ();
 		GameObject.FindObjectOfType<CameraControl> ().ScreenShake (.2f, 0f, .06f);
@@ -205,11 +228,17 @@ public class GameManager : MonoBehaviour {
 		animDone = true;
 	}
 
-	void HealthDrop(){
+	void HealthDrop(float amt){
 		t = 0f;
-		float failDrop = .1f;
-		newHealth = currHealth - failDrop;
+		newHealth = currHealth + amt;
+		if (newHealth <= 0f) {
+			StartCoroutine (RestartGame ());
+		}
+	}
 
+	IEnumerator RestartGame(){
+		yield return new WaitForSeconds (.5f);
+		SceneManager.LoadScene (SceneManager.GetActiveScene ().name);
 	}
 
 	public void CreateNewPlayerPolygon(){

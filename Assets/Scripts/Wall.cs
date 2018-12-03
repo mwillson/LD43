@@ -17,7 +17,7 @@ public class Wall : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
 		if (moving) {
 			transform.position = Vector3.MoveTowards (transform.position, new Vector3 (0f, 0f, .08f), .05f);
 		}
