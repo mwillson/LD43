@@ -90,17 +90,33 @@ public class TestPolygon : MonoBehaviour
 		mesh.RecalculateNormals();
 		mesh.RecalculateBounds();
 
-		// Set up game object with mesh;
-		var meshRenderer = gameObject.AddComponent<MeshRenderer>();
-		meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        // Set up game object with mesh
+        MeshRenderer meshRenderer;
+        if (GetComponent<MeshRenderer>() == null)
+        {
+            meshRenderer = gameObject.AddComponent<MeshRenderer>();
+        }
+        else
+        {
+            meshRenderer = gameObject.GetComponent<MeshRenderer>();
+        }
+        meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
 
-		var filter = gameObject.AddComponent<MeshFilter>();
-		filter.mesh = mesh;
+        MeshFilter filter;
+        if (GetComponent<MeshFilter>() == null)
+        {
+            filter = gameObject.AddComponent<MeshFilter>();
+        }
+        else
+        {
+            filter = gameObject.GetComponent<MeshFilter>();
+        }
+        filter.mesh = mesh;
 
-		//gameObject.AddComponent<Outline> ();
-		//GetComponent<Outline> ().enabled = false;
-		//GetComponent<Outline> ().color = 1;
-	}
+        //gameObject.AddComponent<Outline> ();
+        //GetComponent<Outline> ().enabled = false;
+        //GetComponent<Outline> ().color = 1;
+    }
 
 	//remove vertex at index i
 	public void RemoveVertex(int i){
