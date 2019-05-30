@@ -60,10 +60,10 @@ PlayerSettings:
   allowedAutorotateToLandscapeRight: 1
   allowedAutorotateToLandscapeLeft: 1
   useOSAutorotation: 1
-  use32BitDisplayBuffer: 1
+  use32BitDisplayBuffer: 0
   preserveFramebufferAlpha: 0
   disableDepthAndStencilBuffers: 0
-  androidBlitType: 0
+  androidBlitType: 1
   defaultIsFullScreen: 1
   defaultIsNativeResolution: 1
   macRetinaSupport: 1
@@ -76,7 +76,7 @@ PlayerSettings:
   hideHomeButton: 0
   submitAnalytics: 1
   usePlayerLog: 1
-  bakeCollisionMeshes: 0
+  bakeCollisionMeshes: 1
   forceSingleInstance: 0
   resizableWindow: 0
   useMacAppStoreValidation: 0
@@ -153,11 +153,12 @@ PlayerSettings:
   protectGraphicsMemory: 0
   useHDRDisplay: 0
   m_ColorGamuts: 00000000
-  targetPixelDensity: 30
-  resolutionScalingMode: 0
-  androidSupportedAspectRatio: 1
-  androidMaxAspectRatio: 2.1
-  applicationIdentifier: {}
+  targetPixelDensity: 200
+  resolutionScalingMode: 1
+  androidSupportedAspectRatio: 2
+  androidMaxAspectRatio: 2.61
+  applicationIdentifier:
+    Android: com.nongenregames.verticease
   buildNumber: {}
   AndroidBundleVersionCode: 1
   AndroidMinSdkVersion: 16
@@ -171,11 +172,11 @@ PlayerSettings:
   ForceSDCardPermission: 0
   CreateWallpaper: 0
   APKExpansionFiles: 0
-  keepLoadedShadersAlive: 0
-  StripUnusedMeshComponents: 0
+  keepLoadedShadersAlive: 1
+  StripUnusedMeshComponents: 1
   VertexChannelCompressionMask:
     serializedVersion: 2
-    m_Bits: 238
+    m_Bits: 4294967295
   iPhoneSdkVersion: 988
   iOSTargetOSVersionString: 7.0
   tvOSSdkVersion: 0
@@ -245,7 +246,7 @@ PlayerSettings:
   androidSplashScreen: {fileID: 0}
   AndroidKeystoreName: 
   AndroidKeyaliasName: 
-  AndroidTVCompatibility: 1
+  AndroidTVCompatibility: 0
   AndroidIsGame: 1
   AndroidEnableTango: 0
   androidEnableBanner: 1

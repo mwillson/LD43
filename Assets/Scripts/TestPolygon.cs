@@ -13,6 +13,20 @@ public class TestPolygon : MonoBehaviour
 	[SerializeField]
 	public Color color;
 
+	[SerializeField]
+	public Stack<IndexedVertex> removedStack;
+
+    [SerializeField]
+    public GameObject markerPrefab;
+
+    [SerializeField]
+    public Transform markerParent;
+
+    public void Awake()
+    {
+        removedStack = new Stack<IndexedVertex>();
+    }
+
 	private void Start () {
 
 		Debug.Log ("polygon start");
@@ -49,7 +63,13 @@ public class TestPolygon : MonoBehaviour
 			meshRenderer = gameObject.GetComponent<MeshRenderer> ();
 		}
 		meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
-
+        //lower alpha if player (clickable) polygon
+        if (gameObject.name == "PlayerPolygon")
+        {
+            Color myColor = meshRenderer.material.GetColor("_Color");
+            myColor.a = .7f;
+            meshRenderer.material.SetColor("_Color", myColor);
+        }
 		MeshFilter filter;
 		if (GetComponent<MeshFilter> () == null) {
 			filter = gameObject.AddComponent<MeshFilter> ();
@@ -61,6 +81,8 @@ public class TestPolygon : MonoBehaviour
 		gameObject.AddComponent<Outline> ();
 		GetComponent<Outline> ().enabled = false;
 		GetComponent<Outline> ().color = 1;
+
+		
 	}
 		
 	public void Setup(){
@@ -90,22 +112,55 @@ public class TestPolygon : MonoBehaviour
 		mesh.RecalculateNormals();
 		mesh.RecalculateBounds();
 
-		// Set up game object with mesh;
-		var meshRenderer = gameObject.AddComponent<MeshRenderer>();
-		meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        // Set up game object with mesh
+        MeshRenderer meshRenderer;
+        if (GetComponent<MeshRenderer>() == null)
+        {
+            meshRenderer = gameObject.AddComponent<MeshRenderer>();
+        }
+        else
+        {
+            meshRenderer = gameObject.GetComponent<MeshRenderer>();
+        }
+        meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
 
-		var filter = gameObject.AddComponent<MeshFilter>();
-		filter.mesh = mesh;
+        MeshFilter filter;
+        if (GetComponent<MeshFilter>() == null)
+        {
+            filter = gameObject.AddComponent<MeshFilter>();
+        }
+        else
+        {
+            filter = gameObject.GetComponent<MeshFilter>();
+        }
+        filter.mesh = mesh;
 
-		//gameObject.AddComponent<Outline> ();
-		//GetComponent<Outline> ().enabled = false;
-		//GetComponent<Outline> ().color = 1;
-	}
+        //gameObject.AddComponent<Outline> ();
+        //GetComponent<Outline> ().enabled = false;
+        //GetComponent<Outline> ().color = 1;
+    }
 
 	//remove vertex at index i
 	public void RemoveVertex(int i){
+        Vector3 vertCopy = new Vector3(verticesList[i].x, verticesList[i].y, verticesList[i].z);
+
+        foreach (Transform markerTF in GameObject.Find("Markers").transform)
+        {
+            Vector3 mvert = markerTF.GetComponent<RemovalMarker>().vert;
+            if (mvert.x == vertCopy.x && mvert.y == vertCopy.y)
+            {
+                Destroy(markerTF.gameObject);
+                break;
+            }
+        }
+
+		removedStack.Push (new IndexedVertex (vertCopy, i));
 		verticesList.RemoveAt (i);
 		ReDraw ();
+	}
+
+	public void ResetRemovedStack(){
+		removedStack.Clear ();
 	}
 
 	public void ReDraw(){
@@ -139,8 +194,41 @@ public class TestPolygon : MonoBehaviour
 		// Set up game object with mesh;
 		var meshRenderer = gameObject.GetComponent<MeshRenderer>();
 		meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        //polygon player interacts with is slightly see-through
+        if (gameObject.name == "PlayerPolygon")
+        {
+            Color myColor = meshRenderer.material.GetColor("_Color");
+            myColor.a = .7f;
+            meshRenderer.material.SetColor("_Color", myColor);
+        }
 
-		var filter = gameObject.GetComponent<MeshFilter>();
+        var filter = gameObject.GetComponent<MeshFilter>();
 		filter.mesh = mesh;
+
+        DrawMarkers();
+	}
+
+    void DrawMarkers()
+    {
+        foreach(Vector3 vert in verticesList)
+        {
+            GameObject markerGO = (GameObject)Instantiate(markerPrefab, markerParent);
+            Debug.Log("adding marker at:"+ vert);
+            Vector3 tpos = transform.position;
+            markerGO.transform.position = new Vector3(tpos.x + vert.x, tpos.y + vert.y, -0.1f);
+            markerGO.GetComponent<RemovalMarker>().vert = vert;
+        }
+    }
+}
+
+
+
+public struct IndexedVertex{
+	public Vector3 coords;
+	public int index;
+
+	public IndexedVertex(Vector3 c, int i){
+		coords = c;
+		index = i;
 	}
 }

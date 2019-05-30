@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 66a4fea72ac07ff49bcb8c8f3bebd0e5
+timeCreated: 1554865347
+licenseType: Free
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: johnFsebastian Lettering
+  fontNames:
+  - johnFsebastian Lettering
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

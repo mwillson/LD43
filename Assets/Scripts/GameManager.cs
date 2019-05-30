@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-
+using UnityEngine.Events;
 using cakeslice;
 
 public class GameManager : MonoBehaviour {
@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour {
 	float prevBeatTime = 0f, beatTime;
 	bool smallBeat;
 
+    float skyboxOffset;
+
 	Transform wallPlane;
 
 	[SerializeField]
@@ -32,26 +34,63 @@ public class GameManager : MonoBehaviour {
 
 	[SerializeField]
 	public Image healthBar;
-	public float currHealth, newHealth, t;
+	public float currHealth, newHealth, t, wallSpeed;
 
 	[SerializeField]
-	Text chainText;
+	Text chainText, scoreText;
 
-	int score, chainAmt, levelThreshold, chainThreshold;
+	[SerializeField]
+	TextMesh wallText, removeText;
+
+	int score, level, chainAmt, levelThreshold, chainThreshold, polyRangeLow, polyRangeHigh;
+
+	public int numToRemove = 1;
+
+	[SerializeField]
+	public GameObject SuccessSoundPrefab, FailSoundPrefab, Intense1, Intense2, Intense3, Intense4;
+
+	AudioSource audiosource;
+	[SerializeField]
+	public AudioClip chainSound;
+
+	Wall wall;
 
 	// Use this for initialization
 	void Start () {
 		score = 0;
 		chainAmt = 0;
 		chainThreshold = 5;
-		levelThreshold = 30;
+		levelThreshold = 1;
+		level = 0;
+		polyRangeLow = 0;
+		polyRangeHigh = 1;
 		currHealth = 1f;
 		newHealth = 1f;
 		t = 0f;
+		wallSpeed = .05f;
+		audiosource = GameObject.Find ("BGM").GetComponent<AudioSource> ();
 		wallPlane = GameObject.Find ("Wall").transform.Find ("Plane");
 		animDone = false;
 		smallBeat = false;
+        skyboxOffset = 0f;
+		//screen orientation stuff
+		ScreenWatcher.AddOrientationChangeListener(OnOrientationChanged);
+		//Screen.orientation = ScreenOrientation.LandscapeLeft;
+		wall = GameObject.FindObjectOfType<Wall>();
+	
 		currentPoly = GameObject.Find ("PlayerPolygon").GetComponent<TestPolygon> ();
+
+		//PositionForLandscape ();
+
+		if (Screen.orientation == ScreenOrientation.Landscape) {
+			PositionForLandscape ();
+
+		} else if (Screen.orientation == ScreenOrientation.Portrait) {
+			PositionForPortrait ();
+
+		} 
+		GameObject.Find ("MainCanvas").GetComponent<CanvasScaler> ().referenceResolution = new Vector2 (Screen.width, Screen.height);
+
 		polygons = new List<List<Vector3>>();
 		Vector3[] shape1 = new Vector3[] { 
 			new Vector3 (0f, 0f, 0f),
@@ -61,35 +100,131 @@ public class GameManager : MonoBehaviour {
 		};
 		polygons.Add (new List<Vector3>(shape1));
 		Vector3[] shape2 = new Vector3[] { 
+			new Vector3 (0f, -1f, 0f),
 			new Vector3 (0f, 0f, 0f),
-			new Vector3 (0f, 1f, 0f),
-			new Vector3 (2f, 2f, 0f),
-			new Vector3 (1f, 0f, 0f)
+			new Vector3 (2f, 1f, 0f),
+			new Vector3 (1f, -1f, 0f)
 		};
 		polygons.Add (new List<Vector3>(shape2));
 		Vector3[] shape3 = new Vector3[] { 
+			new Vector3 (-1f, -1f, 0f),
 			new Vector3 (0f, 0f, 0f),
-			new Vector3 (1f, 1f, 0f),
-			new Vector3 (2f, 1f, 0f),
-			new Vector3 (1f, 0f, 0f)
+			new Vector3 (1f, 0f, 0f),
+			new Vector3 (0f, -1f, 0f)
 		};
 		polygons.Add (new List<Vector3>(shape3));
 		Vector3[] shape4 = new Vector3[] { 
+			new Vector3 (-1f, -1f, 0f),
 			new Vector3 (0f, 0f, 0f),
-			new Vector3 (1f, 1f, 0f),
-			new Vector3 (2f, 1f, 0f),
-			new Vector3 (3f, 0f, 0f)
+			new Vector3 (1f, 0f, 0f),
+			new Vector3 (2f, -1f, 0f)
 		};
+
+		//5 sided
 		polygons.Add (new List<Vector3>(shape4));
+		Vector3[] shape5 = new Vector3[] { 
+			new Vector3 (0f, -.5f, 0f),
+			new Vector3 (-.5f, 0f, 0f),
+			new Vector3 (0f, 1f, 0f),
+			new Vector3 (1f, 0f, 0f),
+			new Vector3(.5f, -.5f, 0f)
+		};
+		polygons.Add (new List<Vector3>(shape5));
+		Vector3[] shape6 = new Vector3[] { 
+			new Vector3 (0f, -.5f, 0f),
+			new Vector3 (-.5f, 0f, 0f),
+			new Vector3 (-.5f, .5f, 0f),
+			new Vector3 (0f, 1f, 0f),
+			new Vector3(.5f, 0f, 0f)
+		};
+		polygons.Add (new List<Vector3>(shape6));
+		Vector3[] shape7 = new Vector3[] { 
+			new Vector3 (0f, 0f, 0f),
+			new Vector3 (-.5f, .5f, 0f),
+			new Vector3 (.5f, 1f, 0f),
+			new Vector3 (1f, .5f, 0f),
+			new Vector3(.5f, 0f, 0f)
+		};
+		polygons.Add (new List<Vector3>(shape7));
+		Vector3[] shape8 = new Vector3[] { 
+			new Vector3 (0f, -.5f, 0f),
+			new Vector3 (-.5f, 0f, 0f),
+			new Vector3 (0f, .5f, 0f),
+			new Vector3 (1f, 0f, 0f),
+			new Vector3(0f, 0f, 0f)
+		};
+		polygons.Add (new List<Vector3>(shape8));
+
+		//6 sided
+		Vector3[] shape9 = new Vector3[] { 
+			new Vector3 (0f, 0f, 0f),
+			new Vector3 (-.5f, 0f, 0f),
+			new Vector3 (0f, 1f, 0f),
+			new Vector3 (1f, .5f, 0f),
+			new Vector3(.5f, .5f, 0f),
+			new Vector3(1f,-.5f,0f)
+		};
+		polygons.Add (new List<Vector3>(shape9));
+		Vector3[] shape10 = new Vector3[] { 
+			new Vector3 (0f, -.5f, 0f),
+			new Vector3 (-.5f, .5f, 0f),
+			new Vector3 (0f, 1f, 0f),
+			new Vector3 (.5f, 1f, 0f),
+			new Vector3(1f, .5f, 0f),
+			new Vector3(.5f,-.5f,0f)
+		};
+		polygons.Add (new List<Vector3>(shape10));
+		Vector3[] shape11 = new Vector3[] { 
+			new Vector3 (-.5f, -0f, 0f),
+			new Vector3 (0f, .5f, 0f),
+			new Vector3 (0f, 1f, 0f),
+			new Vector3 (.5f, 1f, 0f),
+			new Vector3(.5f, 0f, 0f),
+			new Vector3(1f,-.5f,0f)
+		};
+		polygons.Add (new List<Vector3>(shape11));
+		Vector3[] shape12 = new Vector3[] { 
+			new Vector3 (-.5f, 0f, 0f),
+			new Vector3 (-.5f, .5f, 0f),
+			new Vector3 (0f, 1f, 0f),
+			new Vector3 (1f, 1f, 0f),
+			new Vector3(1f, -.5f, 0f),
+			new Vector3(.5f,-.5f,0f)
+		};
+		polygons.Add (new List<Vector3>(shape12));
 		currentPoly.Setup ();
 		CreateNewPlayerPolygon ();
 		CreateHole ();
 	}
-	
+
+	void PositionForPortrait(){
+		Debug.Log ("portrait mode!!!");
+		wall.startPos = new Vector3 (1f, 0f, 10f);
+		Camera.main.fieldOfView = 120f;
+		Camera.main.transform.position = new Vector3 (1f, 2f, -3f);
+		wall.endPos = new Vector3 (1f, 2f, .08f);
+		//set player polygons position
+		currentPoly.transform.position = new Vector3 (1f, 2f, 0f);
+	}
+
+	void PositionForLandscape (){
+		wall.startPos = new Vector3 (-3f, 0f, 10f);
+		Camera.main.fieldOfView = 60f;
+		Camera.main.transform.position = new Vector3 (1f, 1f, -3f);
+		wall.endPos = new Vector3 (1f, 1f, .08f);
+		//set player polygons position
+		currentPoly.transform.position = new Vector3 (1f, 1f, 0f);
+	}
+
 	// Update is called once per frame
 	void Update () {
-		RenderSettings.skybox.SetFloat ("_Rotation", (Mathf.Abs(Mathf.Cos ((Time.time % 10)) * 10)  + 5));
-		if (currHealth != newHealth) {
+        //rotates skybox back and forth over time, not used anymore
+        //RenderSettings.skybox.SetFloat ("_Rotation", (Mathf.Abs(Mathf.Cos ((Time.time % 10)) * 10)  + 5));
+        //offset increase every frame update
+        skyboxOffset = ((skyboxOffset + .005f) % .92f);
+        RenderSettings.skybox.SetTextureOffset (  "_DownTex", new Vector2(0f, skyboxOffset)   );
+
+        if (currHealth != newHealth) {
 			currHealth = Mathf.Lerp (currHealth, newHealth, t);
 			healthBar.fillAmount = currHealth;
 			t += .5f * Time.deltaTime; 
@@ -125,7 +260,7 @@ public class GameManager : MonoBehaviour {
 	public void CreateHole(){
 		if(GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> () != null)
 			Destroy (GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> ().gameObject);
-		GameObject.FindObjectOfType<Wall> ().CreateHoleShape (currentPoly.verticesList);
+		GameObject.FindObjectOfType<Wall> ().CreateHoleShape (currentPoly.verticesList, numToRemove);
 	}
 
 	//handler for stuff to do when wall hits current player polygon
@@ -138,7 +273,10 @@ public class GameManager : MonoBehaviour {
 
 		while (!animDone)
 			yield return null;
-		GameObject.FindObjectOfType<Wall>().transform.position = new Vector3 (-3f, 0f, 10f);
+		GameObject.FindObjectOfType<Wall>().transform.position = wall.startPos;
+		GameObject.FindObjectOfType<Wall>().speed = wallSpeed;
+		GameObject.FindObjectOfType<Wall> ().speedingup = false;
+		GameObject.FindObjectOfType<PointerController> ().numRemoved = 0;
 
 		animDone = false;
 		CreateNewPlayerPolygon ();
@@ -155,7 +293,7 @@ public class GameManager : MonoBehaviour {
 			StartCoroutine (FailAnim ());
 	}
 
-	bool VerticesAreSame (TestPolygon p1, TestPolygon p2){
+	public bool VerticesAreSame (TestPolygon p1, TestPolygon p2){
 		bool result = true;
 		if (p1.verticesList.Count != p2.verticesList.Count) {
 			Debug.Log ("non-matching vertex count");
@@ -172,17 +310,36 @@ public class GameManager : MonoBehaviour {
 	}
 
 	IEnumerator SuccessAnim(){
-		Debug.Log ("Success!");
+		//play sound
+		GameObject soundGO = Instantiate(SuccessSoundPrefab);
+		//scoring
 		score += 1;
+		//score specific events
+		switch (score) {
+		case 5:
+			wallText.gameObject.SetActive (true);
+			//wallText.transform.localPosition = new Vector3 (-2.6f, -1.5f, 0);
+			wallText.fontSize = 20;
+			wallText.text = "5 in  a  row ,\n get some health";
+			StartCoroutine(TextTimer ());
+			break;
+		default:
+			break;
+		}
+		scoreText.text = "Score: " + score;
+		Debug.Log ("Success! Score:" + score);
+
 		chainAmt += 1;
-		if (chainAmt >= chainThreshold) {
-			HealthDrop (.1f);
-			chainAmt = 0;
+		if (chainAmt == chainThreshold) {
+			StartCoroutine (ChainAnimation ());
+			if (currHealth < 1f)
+				ChainHealth (chainAmt);
 		}
 		chainText.text = "Chain: x" + chainAmt;
 		if (score >= levelThreshold)
 			GoToNextLevel ();
-		//outline the mesh please
+		
+		//outline the mesh
 		bool outEnab = true;
 		currentPoly.GetComponent<cakeslice.Outline>().enabled = true;
 		float i = 0f;
@@ -194,18 +351,200 @@ public class GameManager : MonoBehaviour {
 		}
 
 		currentPoly.GetComponent<cakeslice.Outline>().enabled = false;
+		Destroy (soundGO);
 		animDone = true;
 	}
 
-	void GoToNextLevel(){
+	void ChainHealth(int chainSize){
+		float toAdd = 0f;
+		switch (chainSize) {
+		case 5:
+			toAdd = .05f;
+			break;
+		case 10:
+			toAdd = .07f;
+			break;
+		case 15:
+			toAdd = .1f;
+			break;
+		case 20:
+			toAdd = .15f;
+			break;
+		case 25:
+			toAdd = .25f;
+			break;
+		case 30:
+			toAdd = .35f;
+			break;
+		case 35:
+			toAdd = .5f;
+			break;
+		default:
+			toAdd = 0f;
+			Debug.LogError ("Unrecognized chain threshold: " + chainSize);
+			break;
+		}
+		//add either the full amount or just enough to reach 1(full health)
+		HealthDrop (Mathf.Min(toAdd, 1f-currHealth));
+		//next chain threshold level
+		chainThreshold += 5;
+	}
 
+	IEnumerator ChainAnimation(){
+		
+		float t = 0;
+		while (t < .3f) {
+			chainText.transform.localScale += new Vector3 (.02f, .02f, 0f);
+			t += Time.deltaTime;
+			yield return null;
+		}
+		audiosource.clip = chainSound;
+		audiosource.Play ();
+		t = 0;
+		while (t < .3f) {
+			chainText.transform.localScale -= new Vector3 (.02f, .02f, 0f);
+			t += Time.deltaTime;
+			yield return null;
+		}
+		chainText.transform.localScale = new Vector3 (1f, 1f, 1f);
+	}
+
+	void GoToNextLevel(){
+		level += 1;
+		//loop back to level 1 after level 9
+		if (level > 10)
+			level = 0;
+		levelThreshold += 2;
+
+		wallText.gameObject.SetActive (true);
+		wallText.text = "Level " + level;
+
+		switch (level) {
+		case 0:
+			wallText.fontSize = 20;
+			//wallText.transform.localPosition = new Vector3 (-2.6f, -1.5f, 0);
+			wallText.text = "F it  the  shape\nin to  the  hole !";
+			polyRangeLow = 0;
+			polyRangeHigh = 1;
+			wallSpeed = .05f;
+			numToRemove = 1;
+			GameObject musicTrigger0 = (GameObject)Instantiate (Intense1, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			Destroy (musicTrigger0, 1f);
+			break;
+		case 1:
+			wallText.fontSize = 40;
+			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
+			removeText.gameObject.SetActive (true);
+			polyRangeLow = 0;
+			polyRangeHigh = 1;
+			wallSpeed = .05f;
+			numToRemove = 1;
+			GameObject musicTrigger1 = (GameObject)Instantiate (Intense1, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			Destroy (musicTrigger1, 1f);
+			break;
+		case 2:
+			wallText.fontSize = 40;
+			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
+
+			polyRangeHigh = 4;
+			wallSpeed = .05f;
+			levelThreshold += 5;
+			break;
+		case 3:
+			wallText.fontSize = 40;
+			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
+			polyRangeHigh = 8;
+			break;
+		case 4:
+			wallText.fontSize = 40;
+			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
+			polyRangeHigh = 4;
+			wallSpeed = .1f;
+			levelThreshold += 5;
+			GameObject musicTrigger2 = (GameObject)Instantiate (Intense2, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			Destroy (musicTrigger2, 1f);
+			break;
+		case 5:
+			wallText.fontSize = 40;
+			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
+			polyRangeHigh = 12;
+			wallSpeed = .05f;
+			levelThreshold += 10;
+			break;
+		case 6:
+			polyRangeLow = 4;
+			polyRangeHigh = 8;
+			wallSpeed = .04f;
+			numToRemove = 2;
+			wallText.fontSize = 20;
+			wallText.text += "\nRemove Multiple\nVertices !";
+			//wallText.transform.localPosition = new Vector3 (-2.6f, -1.5f, 0);
+
+			levelThreshold += 10;
+			GameObject musicTrigger3 = (GameObject)Instantiate (Intense3, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			Destroy (musicTrigger3, 1f);
+			break;
+		case 7:
+			wallText.fontSize = 40;
+			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
+
+			polyRangeLow = 0;
+			polyRangeHigh = 12;
+			wallSpeed = .1f;
+			numToRemove = 1;
+			levelThreshold += 20;
+			break;
+		case 8:
+			polyRangeLow = 4;
+			polyRangeHigh = 8;
+			wallSpeed = .08f;
+			numToRemove = 2;
+			GameObject musicTrigger4 = (GameObject)Instantiate (Intense4, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			Destroy (musicTrigger4, 1f);
+			levelThreshold += 20;
+			break;
+		case 9:
+			GameObject musicTrigger5 = (GameObject)Instantiate (Intense2, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			Destroy (musicTrigger5, 1f);
+			polyRangeHigh = 12;
+			wallSpeed = .05f;
+			numToRemove = 2;
+			levelThreshold += 20;
+			break;
+		case 10:
+			GameObject musicTrigger6 = (GameObject)Instantiate (Intense4, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			Destroy (musicTrigger6, 1f);
+			wallSpeed = .1f;
+			numToRemove = 2;
+			levelThreshold += 50;
+			break;
+		default:
+			polyRangeLow = 0;
+			polyRangeHigh = 12;
+			wallSpeed = .05f;
+			numToRemove = 1;
+			break;
+		}
+		removeText.transform.Find ("RemoveNum").GetComponent<TextMesh> ().text = "" + numToRemove;
+		GameObject.FindObjectOfType<Wall> ().speed = wallSpeed;
+		StartCoroutine(TextTimer ());
+	}
+
+	IEnumerator TextTimer(){
+		yield return new WaitForSeconds (5f);
+		wallText.gameObject.SetActive (false);
 	}
 
 	IEnumerator FailAnim(){
 		Debug.Log ("Fail");
+		//play sound
+		GameObject failSoundGO = Instantiate(FailSoundPrefab);
+		//scoring
 		HealthDrop (-.1f);
 		chainAmt = 0;
+		chainThreshold = 5;
 		chainText.text = "Chain: x0";
+		//animation
 		currentPoly.color = Color.grey;
 		currentPoly.ReDraw ();
 		GameObject.FindObjectOfType<CameraControl> ().ScreenShake (.2f, 0f, .06f);
@@ -225,6 +564,7 @@ public class GameManager : MonoBehaviour {
 			yield return new WaitForSeconds (.02f);
 		}
 		currentPoly.transform.position = originalPos;
+		Destroy (failSoundGO);
 		animDone = true;
 	}
 
@@ -242,9 +582,18 @@ public class GameManager : MonoBehaviour {
 	}
 
 	public void CreateNewPlayerPolygon(){
-		//newVerts needs to be a new List of vertices, copied from the list in memory
-		List<Vector3> newVerts = new List<Vector3>(polygons[Random.Range(0,polygons.Count)]);
+        //remove the current removal markers
+        foreach(Transform marker in GameObject.Find("Markers").transform)
+        {
+            Destroy(marker.gameObject);
+        }
 
+		//newVerts needs to be a new List of vertices, copied from the list in memory
+		//polyRangeHigh should never exceed polygons.count
+		List<Vector3> newVerts = new List<Vector3>(polygons[Random.Range(polyRangeLow,polyRangeHigh)]);
+
+		// PROCEDURAL POLYGON GENERATION //
+		// MAY WORK ON IN FUTURE VERSION //
 		/*List<XYPair> confirmedVerts = new List<XYPair> ();
 		//generate 'numVerts' number of unique vertices for polygon
 		for (int i = 0; i < numVerts; i++) {
@@ -270,11 +619,35 @@ public class GameManager : MonoBehaviour {
 			newVerts.Add (newVert);
 			Debug.Log ("new Vert added: " + newVert);
 		}*/
-		currentPoly.GetComponent<TestPolygon> ().verticesList = newVerts;
-		currentPoly.GetComponent<TestPolygon>().vertices2D = System.Array.ConvertAll<Vector3, Vector2>(newVerts.ToArray(), v => v);
-		currentPoly.GetComponent<TestPolygon> ().color = playerPolyColors[UnityEngine.Random.Range(0,playerPolyColors.Length)];
+		currentPoly.verticesList = newVerts;
+		currentPoly.ResetRemovedStack ();
+		currentPoly.vertices2D = System.Array.ConvertAll<Vector3, Vector2>(newVerts.ToArray(), v => v);
+		currentPoly.color = playerPolyColors[UnityEngine.Random.Range(0,playerPolyColors.Length)];
 		currentPoly.ReDraw ();
 		Debug.Log ("Done creating player polygon, verts:" + newVerts.Count);
+	}
+
+	public void OnOrientationChanged(){
+		Debug.Log ("Orientation changed!");
+		if (Screen.orientation == ScreenOrientation.Landscape) {
+			GameObject.FindObjectOfType<Wall> ().startPos = new Vector3 (-3f, 0f, 10f);
+			Camera.main.fieldOfView = 60f;
+			Camera.main.transform.position = new Vector3 (0f, 0f, -3f);
+			wall.endPos = new Vector3 (1f, 1f, .08f);
+			//set player polygons position
+			currentPoly.transform.position = new Vector3(1f,0f,0f);
+
+		} else {
+			Debug.Log ("portrait mode!!!");
+			GameObject.FindObjectOfType<Wall> ().startPos = new Vector3 (1f, -5f, 10f);
+			Camera.main.fieldOfView = 120f;
+			Camera.main.transform.position = new Vector3 (1f, 2f, -3f);
+			wall.endPos = new Vector3 (1f, 3f, .08f);
+			//set player polygons position
+			currentPoly.transform.position = new Vector3(1f,3f,0f);
+		}
+		GameObject.Find ("MainCanvas").GetComponent<CanvasScaler> ().referenceResolution = new Vector2 (Screen.width, Screen.height);
+
 	}
 
 	
