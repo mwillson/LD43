@@ -16,7 +16,7 @@ public class RemovalMarker : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         //should oscillate between .8f and 1.2f
-        scale = (.15f * Mathf.Sin(3f * Mathf.PI * Time.time)) + 1f;
+        scale = (.15f * Mathf.Sin(3f * Mathf.PI * Time.time)) + .5f;
         transform.localScale = new Vector3(scale, scale, 1f);
 	}
 }

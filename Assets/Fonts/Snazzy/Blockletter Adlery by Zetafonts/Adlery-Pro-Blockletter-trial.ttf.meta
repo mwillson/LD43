@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: a977b8208efdf434399691e64e4ddb74
+timeCreated: 1516313432
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Adlery Pro
+  fontNames:
+  - Adlery Pro
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 48b0a14870cdc124aa7dd91c6a261fd9, type: 3}
+  - {fileID: 12800000, guid: 1119577c17d3f834ea782eefba270631, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

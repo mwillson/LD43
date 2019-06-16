@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 36d4701a9fe00ec4dbce31e629b6b602
+timeCreated: 1516313430
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Nero
+  fontNames:
+  - Nero
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

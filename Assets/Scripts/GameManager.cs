@@ -37,12 +37,12 @@ public class GameManager : MonoBehaviour {
 	public float currHealth, newHealth, t, wallSpeed;
 
 	[SerializeField]
-	Text chainText, scoreText;
+	Text chainText, scoreText, infoText;
 
 	[SerializeField]
 	TextMesh wallText, removeText;
 
-	int score, level, chainAmt, levelThreshold, chainThreshold, polyRangeLow, polyRangeHigh;
+	int score, level, chainAmt, levelThreshold, chainThreshold, polyRangeLow, polyRangeHigh, failCounter;
 
 	public int numToRemove = 1;
 
@@ -55,9 +55,15 @@ public class GameManager : MonoBehaviour {
 
 	Wall wall;
 
+    public RectTransform mainCanvas;
+
+    string cylinderOffsetProperty, cylinderOffsetProp2;
+    bool twoOffsetProps;
+
 	// Use this for initialization
 	void Start () {
 		score = 0;
+        failCounter = 0;
 		chainAmt = 0;
 		chainThreshold = 5;
 		levelThreshold = 1;
@@ -80,6 +86,9 @@ public class GameManager : MonoBehaviour {
 	
 		currentPoly = GameObject.Find ("PlayerPolygon").GetComponent<TestPolygon> ();
 
+        cylinderOffsetProperty = "_DownTex";
+        cylinderOffsetProp2 = "_DownTex2";
+        twoOffsetProps = false;
 		//PositionForLandscape ();
 
 		if (Screen.orientation == ScreenOrientation.Landscape) {
@@ -205,25 +214,32 @@ public class GameManager : MonoBehaviour {
 		wall.endPos = new Vector3 (1f, 2f, .08f);
 		//set player polygons position
 		currentPoly.transform.position = new Vector3 (1f, 2f, 0f);
-	}
+        infoText.GetComponent<RectTransform>().sizeDelta = new Vector2(mainCanvas.sizeDelta.x, 120f);
+        infoText.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 70f);
+    }
 
-	void PositionForLandscape (){
+    void PositionForLandscape (){
 		wall.startPos = new Vector3 (-3f, 0f, 10f);
 		Camera.main.fieldOfView = 60f;
 		Camera.main.transform.position = new Vector3 (1f, 1f, -3f);
 		wall.endPos = new Vector3 (1f, 1f, .08f);
 		//set player polygons position
 		currentPoly.transform.position = new Vector3 (1f, 1f, 0f);
-	}
+        infoText.GetComponent<RectTransform>().sizeDelta = new Vector2(mainCanvas.sizeDelta.x, 50f);
+        infoText.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 40f);
+    }
 
-	// Update is called once per frame
-	void Update () {
+    // Update is called once per frame
+    void Update () {
         //rotates skybox back and forth over time, not used anymore
         //RenderSettings.skybox.SetFloat ("_Rotation", (Mathf.Abs(Mathf.Cos ((Time.time % 10)) * 10)  + 5));
         //offset increase every frame update
         skyboxOffset = ((skyboxOffset + .005f) % .92f);
-        RenderSettings.skybox.SetTextureOffset (  "_DownTex", new Vector2(0f, skyboxOffset)   );
-
+        RenderSettings.skybox.SetTextureOffset ( cylinderOffsetProperty, new Vector2(0f, skyboxOffset)   );
+        if (twoOffsetProps)
+        {
+            RenderSettings.skybox.SetTextureOffset(cylinderOffsetProp2, new Vector2(0f, skyboxOffset));
+        }
         if (currHealth != newHealth) {
 			currHealth = Mathf.Lerp (currHealth, newHealth, t);
 			healthBar.fillAmount = currHealth;
@@ -338,6 +354,10 @@ public class GameManager : MonoBehaviour {
 		chainText.text = "Chain: x" + chainAmt;
 		if (score >= levelThreshold)
 			GoToNextLevel ();
+        else
+        {
+            UpdateRemoveText();
+        }
 		
 		//outline the mesh
 		bool outEnab = true;
@@ -352,6 +372,13 @@ public class GameManager : MonoBehaviour {
 
 		currentPoly.GetComponent<cakeslice.Outline>().enabled = false;
 		Destroy (soundGO);
+        Vector3 wallEndPos = GameObject.Find("Main Camera").transform.position;
+        while (wallPlane.parent.position.z > wallEndPos.z)
+        {
+            wallPlane.parent.position = Vector3.MoveTowards(wallPlane.parent.position, wallEndPos, .25f);
+            Debug.Log(wallPlane.parent.position + ", end?" + wallEndPos);
+            yield return null;
+        }
 		animDone = true;
 	}
 
@@ -423,7 +450,7 @@ public class GameManager : MonoBehaviour {
 		case 0:
 			wallText.fontSize = 20;
 			//wallText.transform.localPosition = new Vector3 (-2.6f, -1.5f, 0);
-			wallText.text = "F it  the  shape\nin to  the  hole !";
+			//wallText.text = "F it  the  shape\nin to  the  hole !";
 			polyRangeLow = 0;
 			polyRangeHigh = 1;
 			wallSpeed = .05f;
@@ -445,8 +472,9 @@ public class GameManager : MonoBehaviour {
 		case 2:
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
+                GoToNextWorld();
 
-			polyRangeHigh = 4;
+                polyRangeHigh = 4;
 			wallSpeed = .05f;
 			levelThreshold += 5;
 			break;
@@ -472,14 +500,15 @@ public class GameManager : MonoBehaviour {
 			levelThreshold += 10;
 			break;
 		case 6:
+
 			polyRangeLow = 4;
 			polyRangeHigh = 8;
 			wallSpeed = .04f;
 			numToRemove = 2;
 			wallText.fontSize = 20;
-			wallText.text += "\nRemove Multiple\nVertices !";
-			//wallText.transform.localPosition = new Vector3 (-2.6f, -1.5f, 0);
-
+			infoText.text = "\nRemove Multiple\nVertices !";
+            //wallText.transform.localPosition = new Vector3 (-2.6f, -1.5f, 0);
+            //GoToNextWorld();
 			levelThreshold += 10;
 			GameObject musicTrigger3 = (GameObject)Instantiate (Intense3, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger3, 1f);
@@ -525,12 +554,18 @@ public class GameManager : MonoBehaviour {
 			numToRemove = 1;
 			break;
 		}
-		removeText.transform.Find ("RemoveNum").GetComponent<TextMesh> ().text = "" + numToRemove;
-		GameObject.FindObjectOfType<Wall> ().speed = wallSpeed;
+		//removeText.transform.Find ("RemoveNum").GetComponent<TextMesh> ().text = "" + numToRemove;
+        //infoText.text = "" + numToRemove;
+        GameObject.FindObjectOfType<Wall> ().speed = wallSpeed;
 		StartCoroutine(TextTimer ());
 	}
 
-	IEnumerator TextTimer(){
+    void UpdateRemoveText()
+    {
+        infoText.text = "Remove " + numToRemove;
+    }
+
+    IEnumerator TextTimer(){
 		yield return new WaitForSeconds (5f);
 		wallText.gameObject.SetActive (false);
 	}
@@ -541,6 +576,11 @@ public class GameManager : MonoBehaviour {
 		GameObject failSoundGO = Instantiate(FailSoundPrefab);
 		//scoring
 		HealthDrop (-.1f);
+        failCounter += 1;
+        if(failCounter == 2)
+        {
+            infoText.text = "Two finger tap to Undo";
+        }
 		chainAmt = 0;
 		chainThreshold = 5;
 		chainText.text = "Chain: x0";
@@ -580,6 +620,33 @@ public class GameManager : MonoBehaviour {
 		yield return new WaitForSeconds (.5f);
 		SceneManager.LoadScene (SceneManager.GetActiveScene ().name);
 	}
+
+    public void GoToNextWorld()
+    {
+        StartCoroutine(NextWorldTransition());
+    }
+
+    //change world we are in
+    IEnumerator NextWorldTransition()
+    {
+        twoOffsetProps = true;
+        float blendVal = 0f;
+        while (blendVal < 1f)
+        {
+            blendVal += .005f;
+            if (blendVal >= .5f)
+            {
+                cylinderOffsetProperty = "_DownTex2";
+                cylinderOffsetProp2 = "_DownTex";
+            }
+        
+            RenderSettings.skybox.SetFloat("_Blend", blendVal);
+            yield return null;
+        }
+        RenderSettings.skybox.SetFloat("_Blend", 1f);
+        twoOffsetProps = false;
+        yield return null;
+    }
 
 	public void CreateNewPlayerPolygon(){
         //remove the current removal markers
@@ -623,7 +690,8 @@ public class GameManager : MonoBehaviour {
 		currentPoly.ResetRemovedStack ();
 		currentPoly.vertices2D = System.Array.ConvertAll<Vector3, Vector2>(newVerts.ToArray(), v => v);
 		currentPoly.color = playerPolyColors[UnityEngine.Random.Range(0,playerPolyColors.Length)];
-		currentPoly.ReDraw ();
+        currentPoly.OutlineFadeInEffect();
+		//currentPoly.ReDraw ();
 		Debug.Log ("Done creating player polygon, verts:" + newVerts.Count);
 	}
 

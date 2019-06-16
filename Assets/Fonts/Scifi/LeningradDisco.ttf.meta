@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: cc92d598e10a8794db95a335bb625d53
+timeCreated: 1516313432
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Leningrad Disco
+  fontNames:
+  - Leningrad Disco
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

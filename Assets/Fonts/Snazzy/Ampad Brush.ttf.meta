@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 1ed0a51d745a01744af09c164e8eb13b
+timeCreated: 1516313429
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Ampad Brush
+  fontNames:
+  - Ampad Brush
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

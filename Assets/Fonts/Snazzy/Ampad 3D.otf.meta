@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 0a47b9431fefe3d4abab8d5bcb925b6a
+timeCreated: 1516313429
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Ampad 3D
+  fontNames:
+  - Ampad 3D
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

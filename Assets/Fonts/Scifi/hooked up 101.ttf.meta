@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: f4b25d158412c8c4a8b8679a3e33bdde
+timeCreated: 1516313433
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Hooked Up 101
+  fontNames:
+  - Hooked Up 101
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

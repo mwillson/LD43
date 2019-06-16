@@ -15,8 +15,10 @@ public class PointerController : MonoBehaviour{
 	Wall wall;
     public Camera mainCam;
     float width, height;
-    Vector3 touchposition;
+    Vector3 touchposition, mousePos;
     public bool touching;
+
+    public bool mouseControlEnabled;
 
 	// Use this for initialization
 	void Start () {
@@ -39,12 +41,7 @@ public class PointerController : MonoBehaviour{
     {
         //the higher the polygon's z value, the farther it is from the camera
         zDepth = polygon.position.z + 3;
-        Vector3 mousePos = Input.mousePosition;
-        mousePos.z = zDepth;
-        mousePos = Camera.main.ScreenToWorldPoint(mousePos);
-        //set this transform's position to the mouse's world position
-        //Debug.Log("MousePos:" + mousePos);
-        transform.position = mousePos;
+        
         //check if near a polygon vertex
         highlightedOne = false;
         touching = false;
@@ -68,6 +65,7 @@ public class PointerController : MonoBehaviour{
 
         foreach (Vector3 vert in polygonScript.verticesList)
         {
+            //regular, touch control
             if (touching && Vector3.Distance(touchposition, vert + new Vector3(wall.endPos.x, wall.endPos.y, 0f)) < .35f)
             {
                 touching = true;
@@ -78,6 +76,24 @@ public class PointerController : MonoBehaviour{
                 TryRemoveVertex();
                 //break out, can only remove 1 per update. also prevents concurrent modification of vertices list
                 break;
+            }
+
+            //mouse control for debugging in editor
+            if (mouseControlEnabled)
+            {
+                Vector3 mousePos = Input.mousePosition;
+                mousePos.z = zDepth;
+                mousePos = mainCam.ScreenToWorldPoint(mousePos);
+                //set this transform's position to the mouse's world position
+                //Debug.Log("MousePos:" + mousePos);
+                transform.position = mousePos;
+                if (Vector3.Distance(mousePos, vert + new Vector3(wall.endPos.x, wall.endPos.y, 0f)) < .35f)
+                {
+                    highlightedOne = true;
+                    highlightGO.GetComponent<SpriteRenderer>().enabled = true;
+                    highlightGO.GetComponent<HighlightVertex>().SetHighlightedVertex(vert);
+                    highlightGO.GetComponent<HighlightVertex>().isHighlighting = true;
+                }
             }
         }
         //if we were not near any vertex, disable highlighter this frame
@@ -95,29 +111,36 @@ public class PointerController : MonoBehaviour{
       
     }
 
-	/*void OnMouseDown(){
-		//if highlighter is highlighting something
-		//remove the vertex its highlighting
-		Debug.Log("Mouse clicked down");
-		if (highlightedOne ) {
-			Debug.Log ("One definitely highlighted!");
-			if (polygonScript.verticesList.Count > 3) {
-				Debug.Log ("vertices at least 3");
-				polygonScript.RemoveVertex (highlightGO.GetComponent<HighlightVertex> ().removalIndex);
-				numRemoved += 1;
+	void OnMouseDown(){
+        if (mouseControlEnabled)
+        {
+            //if highlighter is highlighting something
+            //remove the vertex its highlighting
+            Debug.Log("Mouse clicked down");
+            if (highlightedOne)
+            {
+                Debug.Log("One definitely highlighted!");
+                if (polygonScript.verticesList.Count > 3)
+                {
+                    Debug.Log("vertices at least 3");
+                    polygonScript.RemoveVertex(highlightGO.GetComponent<HighlightVertex>().removalIndex);
+                    numRemoved += 1;
 
-				//if we've removed all and it matches, speed up wall to finish shape
-				if (numRemoved == gm.numToRemove) {
-					TestPolygon hole = GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> ();
-					bool success = gm.VerticesAreSame (hole, polygonScript);
-					if (success) {
-						GameObject.FindObjectOfType<Wall> ().speedingup = true;
-					}
-				}
-			}
+                    //if we've removed all and it matches, speed up wall to finish shape
+                    if (numRemoved == gm.numToRemove)
+                    {
+                        TestPolygon hole = GameObject.Find("Wall").GetComponentInChildren<TestPolygon>();
+                        bool success = gm.VerticesAreSame(hole, polygonScript);
+                        if (success)
+                        {
+                            GameObject.FindObjectOfType<Wall>().speedingup = true;
+                        }
+                    }
+                }
 
-		}
-	}*/
+            }
+        }
+	}
 
     void TryRemoveVertex()
     {

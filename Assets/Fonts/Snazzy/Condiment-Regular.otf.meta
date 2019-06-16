@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: ebf7ddb0462cb27429553d86fe2b589e
+timeCreated: 1516313432
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Condiment
+  fontNames:
+  - Condiment
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 2a1462e2420e37543ab4c5bc248514da, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
