@@ -47,6 +47,6 @@ MonoBehaviour:
   vertices2D: []
   color: {r: 0, g: 0, b: 0, a: 0}
   markerPrefab: {fileID: 0}
-  linePrefab: {fileID: 0}
+  linePrefab: {fileID: 1188338060061164, guid: 6249ccd4a1020dc42a8c252e0a3f9f01, type: 3}
   linesDoneDrawing: 
   markerParent: {fileID: 0}

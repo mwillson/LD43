@@ -1,13 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Wall : MonoBehaviour {
 
 	[SerializeField]
 	public GameObject polygonPrefab;
 
-	GameManager gm;
+	Manager gm;
 
 	bool moving;
 	public bool speedingup;
@@ -18,13 +19,19 @@ public class Wall : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		gm = GameObject.FindObjectOfType<GameManager> ();
-		speed = .05f;
+        if (SceneManager.GetActiveScene().name == "casual")
+            gm = GameObject.FindObjectOfType<CasualGameManager>();
+        else
+            gm = GameObject.FindObjectOfType<GameManager>();
+        speed = .05f;
 		speedingup = false;
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
+        //don't do anything if paused
+        if (gm.paused) return;
+
 		if (moving) {
 			//linear increase in speed if speeding up?
 			if (speedingup)

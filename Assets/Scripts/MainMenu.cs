@@ -15,7 +15,8 @@ public class MainMenu : MonoBehaviour {
 	public Color[] playerPolyColors;
 
 	// Use this for initialization
-	void Start () {
+	void Start () { 
+
 		polygons = new List<List<Vector3>>();
 		Vector3[] shape1 = new Vector3[] { 
 			new Vector3 (0f, 0f, 0f),
@@ -147,6 +148,11 @@ public class MainMenu : MonoBehaviour {
 	public void LoadMainScene(){
 		SceneManager.LoadScene ("scene1");
 	}
+
+    public void LoadScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
+    }
 
 	// Update is called once per frame
 	void Update () {

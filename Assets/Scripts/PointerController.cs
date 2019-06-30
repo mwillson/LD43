@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 
 public class PointerController : MonoBehaviour{
 
@@ -10,7 +11,7 @@ public class PointerController : MonoBehaviour{
 	GameObject highlightGO;
 	TestPolygon polygonScript;
 	public bool highlightedOne;
-	GameManager gm;
+	Manager gm;
 	public int numRemoved;
 	Wall wall;
     public Camera mainCam;
@@ -27,7 +28,12 @@ public class PointerController : MonoBehaviour{
 		polygonScript = polygon.GetComponent<TestPolygon>();
 		highlightGO = transform.Find ("Highlighter").gameObject;
 		highlightedOne = false;
-		gm = GameObject.FindObjectOfType<GameManager> ();
+
+        if (SceneManager.GetActiveScene().name == "casual")
+            gm = GameObject.FindObjectOfType<CasualGameManager>();
+        else
+            gm = GameObject.FindObjectOfType<GameManager>();
+        
 		numRemoved = 0;
 		wall = GameObject.FindObjectOfType<Wall> ();
 
@@ -125,9 +131,10 @@ public class PointerController : MonoBehaviour{
                     Debug.Log("vertices at least 3");
                     polygonScript.RemoveVertex(highlightGO.GetComponent<HighlightVertex>().removalIndex);
                     numRemoved += 1;
-
-                    //if we've removed all and it matches, speed up wall to finish shape
-                    if (numRemoved == gm.numToRemove)
+                    gm.numToRemove -= 1;
+                    gm.UpdateRemoveText();
+                    //if we've removed the correct amount and it matches, speed up wall to finish shape
+                    if (gm.numToRemove == 0)
                     {
                         TestPolygon hole = GameObject.Find("Wall").GetComponentInChildren<TestPolygon>();
                         bool success = gm.VerticesAreSame(hole, polygonScript);
@@ -149,9 +156,10 @@ public class PointerController : MonoBehaviour{
             Debug.Log("vertices at least 3");
             polygonScript.RemoveVertex(highlightGO.GetComponent<HighlightVertex>().removalIndex);
             numRemoved += 1;
-
+            gm.numToRemove -= 1;
+            gm.UpdateRemoveText();
             //if we've removed all and it matches, speed up wall to finish shape
-            if (numRemoved == gm.numToRemove)
+            if (gm.numToRemove == 0)
             {
                 TestPolygon hole = GameObject.Find("Wall").GetComponentInChildren<TestPolygon>();
                 bool success = gm.VerticesAreSame(hole, polygonScript);
@@ -168,7 +176,9 @@ public class PointerController : MonoBehaviour{
 			IndexedVertex toReplace = polygonScript.removedStack.Pop ();
 			polygonScript.verticesList.Insert (toReplace.index, toReplace.coords);
 			polygonScript.ReDraw ();
-		}
+            gm.numToRemove += 1;
+            gm.UpdateRemoveText();
+        }
 	}
 		
 }

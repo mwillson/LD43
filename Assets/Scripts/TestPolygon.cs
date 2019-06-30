@@ -91,6 +91,7 @@ public class TestPolygon : MonoBehaviour
                 filter = gameObject.GetComponent<MeshFilter>();
             }
             filter.mesh = mesh;
+            FindLines(vertices3D);
         }
 
 		gameObject.AddComponent<Outline> ();
@@ -195,20 +196,21 @@ public class TestPolygon : MonoBehaviour
             else
                 Debug.LogError("How did we get outside of range of vertices list?");
 
-            StartCoroutine(DrawLine(vert, new Vector3(vert.x, vert.y, vert.z), new Vector3(nextNeighbor.x, nextNeighbor.y, nextNeighbor.z)));
+            StartCoroutine(AnimatedLine(vert, new Vector3(vert.x, vert.y, vert.z), new Vector3(nextNeighbor.x, nextNeighbor.y, nextNeighbor.z)));
             i += 1;
         }
     }
 
     //Draws a line over a short time period between two points in space
-    IEnumerator DrawLine(Vector3 originalVert, Vector3 first, Vector3 second)
+    IEnumerator AnimatedLine(Vector3 originalVert, Vector3 first, Vector3 second)
     {
         GameObject newLineObj = Instantiate(linePrefab, transform);
         LineRenderer line = newLineObj.GetComponent<LineRenderer>();
         Vector3 newEnd = new Vector3(first.x, first.y, first.z);
         while (Mathf.Abs(Vector3.Distance(newEnd, second)) > .02f)
         {
-            newEnd = Vector3.MoveTowards(newEnd, second, .05f);
+            float lineLength = Vector3.Distance(first, second);
+            newEnd = Vector3.MoveTowards(newEnd, second, lineLength/10f);
             line.SetPositions(new Vector3[2] { first, newEnd });
             line.transform.GetChild(0).localPosition = newEnd;
             yield return null;
@@ -272,11 +274,82 @@ public class TestPolygon : MonoBehaviour
             meshRenderer.material.SetColor("_Color", myColor);
         }
 
+        FindLines(vertices3D);
+
         var filter = gameObject.GetComponent<MeshFilter>();
 		filter.mesh = mesh;
 
         DrawMarkers();
 	}
+
+    //check all sets of 3 vertices to see if they form a line
+    void FindLines(Vector3[] vertices)
+    {
+        //clear out all existing lines
+        foreach(Transform t in transform)
+        {
+            if (t.GetComponent<LineRenderer>() != null) Destroy(t.gameObject);
+        }
+        bool onXAxis = false, onYAxis = false;
+        foreach (Vector3[] threecombo in Combinations(vertices, 3))
+        {
+            //Debug.Log("Combo:");
+            //Debug.Log(threecombo[0]);
+            //Debug.Log(threecombo[1]);
+            //Debug.Log(threecombo[2]);
+            onYAxis = (threecombo[0].x == threecombo[1].x) && (threecombo[1].x == threecombo[2].x);
+            onXAxis = (threecombo[0].y == threecombo[1].y) && (threecombo[1].y == threecombo[2].y);
+
+            if (onXAxis || onYAxis)
+            {
+                Debug.Log("three in a row! line draw!");
+                GameObject newLineObj = Instantiate(linePrefab, transform);
+                LineRenderer line = newLineObj.GetComponent<LineRenderer>();
+                Color lineColor = color;
+                if (gameObject.name == "PlayerPolygon") lineColor.a = .7f;
+
+                line.startColor = lineColor;
+                line.endColor = lineColor;
+                line.SetPositions(threecombo);
+            }
+        }
+    }
+
+    // Enumerate all possible m-size combinations of [0, 1, ..., n-1] array
+    // in lexicographic order (first [0, 1, 2, ..., m-1]).
+    private IEnumerable<int[]> Combinations(int m, int n)
+    {
+        int[] result = new int[m];
+        Stack<int> stack = new Stack<int>(m);
+        stack.Push(0);
+        while (stack.Count > 0)
+        {
+            int index = stack.Count - 1;
+            int value = stack.Pop();
+            while (value < n)
+            {
+                result[index++] = value++;
+                stack.Push(value);
+                if (index != m) continue;
+                yield return (int[])result.Clone(); // thanks to @xanatos
+                //yield return result;
+                break;
+            }
+        }
+    }
+
+    IEnumerable<T[]> Combinations<T>(T[] array, int m)
+    {
+        T[] result = new T[m];
+        foreach (int[] j in Combinations(m, array.Length))
+        {
+            for (int i = 0; i < m; i++)
+            {
+                result[i] = array[j[i]];
+            }
+            yield return result;
+        }
+    }
 
     void DrawMarkers()
     {

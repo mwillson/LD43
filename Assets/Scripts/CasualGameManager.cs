@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Events;
 using cakeslice;
 
-public class GameManager : Manager {
+public class CasualGameManager : Manager {
 
 	TestPolygon currentPoly;
 
@@ -35,17 +35,15 @@ public class GameManager : Manager {
 	[SerializeField]
 	public Material radialMat;
 
-
 	[SerializeField]
 	public Image healthBar;
 	public float currHealth, newHealth, t, wallSpeed;
 
 	[SerializeField]
-	Text chainText, scoreText, infoText;
+	Text chainText, scoreText, infoText, levelText;
 
 	[SerializeField]
 	TextMesh wallText, removeText;
-
 
     int level, chainAmt, levelThreshold, chainThreshold, polyRangeLow, polyRangeHigh, failCounter;
 
@@ -93,25 +91,16 @@ public class GameManager : Manager {
         cylinderOffsetProperty = "_DownTex";
         cylinderOffsetProp2 = "_DownTex2";
         twoOffsetProps = false;
-        //PositionForLandscape ();
+		//PositionForLandscape ();
 
-        //set up text colors
-        scoreText.color = world1Text;
-        scoreText.GetComponent<UnityEngine.UI.Outline>().effectColor = world1Outline;
-        chainText.color = world1Text;
-        chainText.GetComponent<UnityEngine.UI.Outline>().effectColor = world1Outline;
-        infoText.color = world1Text;
-        infoText.GetComponent<UnityEngine.UI.Outline>().effectColor = world1Outline;
-
-
-        if (Screen.orientation == ScreenOrientation.Landscape) {
+		if (Screen.orientation == ScreenOrientation.Landscape) {
 			PositionForLandscape ();
 
 		} else if (Screen.orientation == ScreenOrientation.Portrait) {
 			PositionForPortrait ();
 
 		} 
-		//GameObject.Find ("MainCanvas").GetComponent<CanvasScaler> ().referenceResolution = new Vector2 (Screen.width, Screen.height);
+		GameObject.Find ("MainCanvas").GetComponent<CanvasScaler> ().referenceResolution = new Vector2 (Screen.width, Screen.height);
 
 		polygons = new List<List<Vector3>>();
 		Vector3[] shape1 = new Vector3[] { 
@@ -244,11 +233,10 @@ public class GameManager : Manager {
 
     // Update is called once per frame
     void Update () {
-        if (paused) return;
         //rotates skybox back and forth over time, not used anymore
         //RenderSettings.skybox.SetFloat ("_Rotation", (Mathf.Abs(Mathf.Cos ((Time.time % 10)) * 10)  + 5));
         //offset increase every frame update
-        //offset loops around at .92
+        //offset loops around at .95
         skyboxOffset = ((skyboxOffset + .005f) % .95f);
         RenderSettings.skybox.SetTextureOffset ( cylinderOffsetProperty, new Vector2(0f, skyboxOffset)   );
         //if we are blending, there are two texture properties we have to offset
@@ -264,7 +252,7 @@ public class GameManager : Manager {
         //shortcut to main menu
         if (Input.GetKeyDown(KeyCode.Q))
         {
-            GameObject.FindObjectOfType<HighScore>().SubmitNewScore(score);
+            //GameObject.FindObjectOfType<HighScore>().SubmitNewScore(score);
             SceneManager.LoadScene("mainmenu");
         }
 	}
@@ -285,7 +273,6 @@ public class GameManager : Manager {
         ChangeTexture1(world1Texture);
     }
     void FixedUpdate(){
-        if (paused) return;
 		//1 divided by beats per second gives me roughly how often i should 'do a beat'
 		//mod time by that and every time it loops back to 0, 'do the beat'
 		beatTime = Time.time % (1f/bps);
@@ -296,6 +283,13 @@ public class GameManager : Manager {
 	}
 
 	IEnumerator DoBeat(){
+        //if we changed bps, actually set the variable to the new value now since we are on beat
+        if (bpsChanged)
+        {
+            bps = newBps;
+            //now its set, turn flag off
+            bpsChanged = false;
+        }
 		if (!smallBeat) {
 			wallPlane.localScale = new Vector3 (.8f, .8f, .8f);
 			yield return new WaitForSeconds (.1f);
@@ -420,11 +414,11 @@ public class GameManager : Manager {
 		Debug.Log ("Success! Score:" + score);
 
 		chainAmt += 1;
-		if (chainAmt == chainThreshold) {
+		/*if (chainAmt == chainThreshold) {
 			StartCoroutine (ChainAnimation ());
 			if (currHealth < 1f)
 				ChainHealth (chainAmt);
-		}
+		}*/
 		chainText.text = "Chain: x" + chainAmt;
         //reset num to remove to level base value
         //numToRemove = currentLevel.BaseRemoveNum;
@@ -523,10 +517,18 @@ public class GameManager : Manager {
 		wallText.text = "Level " + level;
 
         currentLevel = levels[level];
+        levelText.text = "Level: " + level;
         polyRangeLow = currentLevel.PolyRangeLow;
         polyRangeHigh = currentLevel.PolyRangeHigh;
         wallSpeed = currentLevel.WallSpeed;
         levelThreshold += currentLevel.NextLevelThreshold;
+        //set up bps change if needed
+        if(currentLevel.BeatsPerSecond != bps)
+        {
+            newBps = currentLevel.BeatsPerSecond;
+            bpsChanged = true;
+        }
+
         //numToRemove = currentLevel.BaseRemoveNum;
         //UpdateRemoveText();
 
@@ -623,7 +625,7 @@ public class GameManager : Manager {
 		//play sound
 		GameObject failSoundGO = Instantiate(FailSoundPrefab);
 		//scoring
-		HealthDrop (-.1f);
+		//HealthDrop (-.1f);
         failCounter += 1;
         if(failCounter == 2)
         {
@@ -665,7 +667,6 @@ public class GameManager : Manager {
 	}
 
 	IEnumerator RestartGame(){
-        GameObject.FindObjectOfType<HighScore>().SubmitNewScore(score);
 		yield return new WaitForSeconds (.5f);
         ChangeTexture1(world1Texture);
         SceneManager.LoadScene (SceneManager.GetActiveScene ().name);
@@ -724,41 +725,8 @@ public class GameManager : Manager {
         cylinderOffsetProp2 = "_DownTex2";
         //reset blend to 0
         RenderSettings.skybox.SetFloat("_Blend", 0f);
-        SetWorldTextColors(worldNum);
 
         yield return null;
-    }
-
-    public void SetWorldTextColors(int world)
-    {
-        Color textColor, outlineColor;
-        switch (world)
-        {
-            case 1:
-                textColor = world1Text;
-                outlineColor = world1Outline;
-                break;
-            case 2:
-                textColor = world2Text;
-                outlineColor = world2Outline;
-                break;
-            case 3:
-                textColor = world3Text;
-                outlineColor = world3Outline;
-                break;
-            default:
-                Debug.LogError("Unknown World in SetTextColors!");
-                textColor = world1Text;
-                outlineColor = world1Outline;
-                break;
-        }
-        //set up text colors
-        scoreText.color = textColor;
-        scoreText.GetComponent<UnityEngine.UI.Outline>().effectColor = outlineColor;
-        chainText.color = textColor;
-        chainText.GetComponent<UnityEngine.UI.Outline>().effectColor = outlineColor;
-        infoText.color = textColor;
-        infoText.GetComponent<UnityEngine.UI.Outline>().effectColor = outlineColor;
     }
 
 	public void CreateNewPlayerPolygon(){
@@ -832,15 +800,4 @@ public class GameManager : Manager {
 	}
 
 	
-}
-
-public struct XYPair{
-	public int x; 
-	public int y;
-
-	public XYPair(int p1, int p2)
-	{
-		x = p1;
-		y = p2;
-	}
 }

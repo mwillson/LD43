@@ -20,7 +20,7 @@ public class CameraControl : MonoBehaviour {
 
 	//shakes screen for amt time, shake range is represented by vrng(vertical) and hrange(horizontal)
 	public IEnumerator Shake(float amt, float vrng, float hrng){
-		GameObject.FindObjectOfType<GameManager> ().cameraWait = true;
+		GameObject.FindObjectOfType<Manager> ().cameraWait = true;
 		Vector3 origpos = transform.position;
 		//shake for amt time
 		float endTime = Time.time + amt;
@@ -32,7 +32,7 @@ public class CameraControl : MonoBehaviour {
 		}
 		//return camera to original pre-shake position
 		transform.position = origpos;
-		GameObject.FindObjectOfType<GameManager> ().cameraWait = false;
+		GameObject.FindObjectOfType<Manager> ().cameraWait = false;
 
 	}
 }
