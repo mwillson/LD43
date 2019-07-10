@@ -10,9 +10,6 @@ public class GameManager : Manager {
 
 	TestPolygon currentPoly;
 
-    //current player polygon(s)
-    List<TestPolygon> currentPolys;
-
     //potential polygon specs to choose from
 	List<List<Vector3>> polygons;
 
@@ -639,14 +636,14 @@ public class GameManager : Manager {
 		case 1:
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
-			removeText.gameObject.SetActive (true);
+			//removeText.gameObject.SetActive (true);
 			GameObject musicTrigger1 = (GameObject)Instantiate (Intense1, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger1, 1f);
 			break;
 		case 2:
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
-                GoToNextWorld(2);
+                
 			//levelThreshold += 5;
 			break;
 		case 3:
@@ -657,7 +654,7 @@ public class GameManager : Manager {
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
 			//levelThreshold += 5;
-                GoToNextWorld(3);
+                GoToNextWorld(2);
                 GameObject musicTrigger2 = (GameObject)Instantiate (Intense2, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger2, 1f);
 			break;
@@ -669,8 +666,9 @@ public class GameManager : Manager {
 		case 6:
 			wallText.fontSize = 20;
 			infoText.text = "\nRemove Multiple\nVertices !";
-           
-			//levelThreshold += 10;
+
+                //levelThreshold += 10;
+                GoToNextWorld(3);
 			GameObject musicTrigger3 = (GameObject)Instantiate (Intense3, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger3, 1f);
 			break;
@@ -723,7 +721,7 @@ public class GameManager : Manager {
 		//play sound
 		GameObject failSoundGO = Instantiate(FailSoundPrefab);
 		//scoring
-		HealthDrop (-.1f);
+		HealthDrop (-.34f);
         failCounter += 1;
         if(failCounter == 2)
         {
@@ -760,7 +758,15 @@ public class GameManager : Manager {
 		t = 0f;
 		newHealth = currHealth + amt;
 		if (newHealth <= 0f) {
-			StartCoroutine (RestartGame ());
+            //show game over stuff
+            //check if highscore, overwrite if so.
+            GameObject.FindObjectOfType<HighScore>().SubmitNewScore(score);
+            //show game over screen
+            GameOverUI.SetActive(true);
+            GameOverUI.transform.Find("HS").GetComponent<Text>().text = "Your Score: " + score + "\nHigh Score: " + PlayerPrefs.GetInt("highestScore");
+
+            paused = true;
+			//StartCoroutine (RestartGame ());
 		}
 	}
 

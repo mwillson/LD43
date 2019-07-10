@@ -4,6 +4,13 @@ using UnityEngine;
 
 public abstract class Manager : MonoBehaviour
 {
+
+    //current player polygon(s)
+    List<TestPolygon> currentPolys;
+
+    //prefab for player polygon
+    public GameObject polyPrefab, GameOverUI;
+
     //is the game paused?
     public bool paused;
 

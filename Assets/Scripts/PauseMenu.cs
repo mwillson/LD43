@@ -12,6 +12,9 @@ public class PauseMenu : MonoBehaviour
     private GameObject pauseMenuObject;
 
     [SerializeField]
+    private GameObject gameOverUIObject;
+
+    [SerializeField]
     private Manager gameManager;
 
     // Start is called before the first frame update
@@ -47,5 +50,17 @@ public class PauseMenu : MonoBehaviour
         GameObject.FindObjectOfType<HighScore>().SubmitNewScore(gameManager.score);
         gameManager.ChangeTexture1(gameManager.world1Texture);
         SceneManager.LoadScene("mainmenu");
+    }
+
+    public void RestartGame()
+    {
+        Debug.LogError("restarting!");
+        paused = false;
+        gameManager.paused = false;
+        gameOverUIObject.SetActive(false);
+
+        GameObject.FindObjectOfType<HighScore>().SubmitNewScore(gameManager.score);
+        gameManager.ChangeTexture1(gameManager.world1Texture);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
