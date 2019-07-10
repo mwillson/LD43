@@ -19,6 +19,8 @@ public class LevelSpec : ScriptableObject
     private int polyRangeHigh;
     [SerializeField]
     private int nextLevelThreshold;
+    [SerializeField]
+    private int numberOfShapes;
 
     public int LevelNum
     {
@@ -60,6 +62,12 @@ public class LevelSpec : ScriptableObject
     {
         get { return nextLevelThreshold; }
         set { nextLevelThreshold = value; }
+    }
+
+    public int NumberOfShapes
+    {
+        get { return numberOfShapes; }
+        set { numberOfShapes = value; }
     }
 
 }

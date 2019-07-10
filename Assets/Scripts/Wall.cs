@@ -8,6 +8,7 @@ public class Wall : MonoBehaviour {
 	[SerializeField]
 	public GameObject polygonPrefab;
 
+    [SerializeField]
 	Manager gm;
 
 	bool moving;
@@ -19,10 +20,12 @@ public class Wall : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        if (SceneManager.GetActiveScene().name == "casual")
+        //this taken care of with inspector assignment?
+        /*if (SceneManager.GetActiveScene().name == "casual")
             gm = GameObject.FindObjectOfType<CasualGameManager>();
         else
             gm = GameObject.FindObjectOfType<GameManager>();
+        */
         speed = .05f;
 		speedingup = false;
 	}
@@ -56,7 +59,7 @@ public class Wall : MonoBehaviour {
 		newPoly.GetComponent<TestPolygon>().vertices2D = System.Array.ConvertAll<Vector3, Vector2>(listCopy.ToArray(), v => v);
 		newPoly.GetComponent<TestPolygon> ().color = Color.black;
 		Debug.Log ("End hole polygon setup");
-
+        gm.wallPoly = newPoly.GetComponent<TestPolygon>();
 		moving = true;
 	}
 

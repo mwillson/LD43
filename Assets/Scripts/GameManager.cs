@@ -10,6 +10,10 @@ public class GameManager : Manager {
 
 	TestPolygon currentPoly;
 
+    //current player polygon(s)
+    List<TestPolygon> currentPolys;
+
+    //potential polygon specs to choose from
 	List<List<Vector3>> polygons;
 
 	[SerializeField]
@@ -47,10 +51,12 @@ public class GameManager : Manager {
 	TextMesh wallText, removeText;
 
 
-    int level, chainAmt, levelThreshold, chainThreshold, polyRangeLow, polyRangeHigh, failCounter;
+    int level, chainAmt, levelThreshold, polyRangeLow, polyRangeHigh, failCounter;
+
+    public int chainThreshold, numberOfShapes;
 
 	[SerializeField]
-	public GameObject SuccessSoundPrefab, FailSoundPrefab, Intense1, Intense2, Intense3, Intense4;
+	public GameObject SuccessSoundPrefab, FailSoundPrefab, Intense1, Intense2, Intense3, Intense4, pointerControllerGO;
 
 	AudioSource audiosource;
 	[SerializeField]
@@ -72,6 +78,7 @@ public class GameManager : Manager {
 		levelThreshold = 1;
 		level = 0;
         currentLevel = levels[0];
+        numberOfShapes = 1;
 		polyRangeLow = 0;
 		polyRangeHigh = 1;
 		currHealth = 1f;
@@ -327,10 +334,16 @@ public class GameManager : Manager {
 
 		while (!animDone)
 			yield return null;
+        if (currentWallSlows > 0)
+        {
+            //for each wall slow applied, undo it, by multiplying wall speed by 2
+            for (int i = 0; i < currentWallSlows; i++) wallSpeed *= 2f;
+            currentWallSlows = 0;     
+        }
 		GameObject.FindObjectOfType<Wall>().transform.position = wall.startPos;
 		GameObject.FindObjectOfType<Wall>().speed = wallSpeed;
 		GameObject.FindObjectOfType<Wall> ().speedingup = false;
-		GameObject.FindObjectOfType<PointerController> ().numRemoved = 0;
+		pointerController.numRemoved = 0;
         //should reset num to remove whether we fail or succeed after anim is done
         numToRemove = currentLevel.BaseRemoveNum;
         UpdateRemoveText();
@@ -424,7 +437,12 @@ public class GameManager : Manager {
 			StartCoroutine (ChainAnimation ());
 			if (currHealth < 1f)
 				ChainHealth (chainAmt);
-		}
+            paused = true;
+            bonusSelector.SetActive(true);
+            pointerControllerGO.SetActive(false);
+            //next chain threshold level
+            chainThreshold += 5;
+        }
 		chainText.text = "Chain: x" + chainAmt;
         //reset num to remove to level base value
         //numToRemove = currentLevel.BaseRemoveNum;
@@ -489,9 +507,84 @@ public class GameManager : Manager {
 		}
 		//add either the full amount or just enough to reach 1(full health)
 		HealthDrop (Mathf.Min(toAdd, 1f-currHealth));
-		//next chain threshold level
-		chainThreshold += 5;
+	
 	}
+
+    //BONUS EVENTS
+
+    public void AddFromHealthBonus()
+    {
+        BonusSelect bonus = bonusSelector.GetComponent<BonusSelect>();
+
+        if (bonus.healthBonus > 0)
+        {
+            //add either the full amount or just enough to reach 1(full health)
+            HealthDrop(Mathf.Min(.1f, 1f - currHealth));
+            bonus.healthBonus -= 1;
+            bonus.healthText.text = "" + bonus.healthBonus;
+        }
+    }
+
+    public void SlowWall()
+    {
+        BonusSelect bonus = bonusSelector.GetComponent<BonusSelect>();
+        if (bonus.slowBonus > 0 )
+        {
+            Debug.LogWarning("wall slow!");
+            wallSpeed *= .5f;
+            wall.speed = wallSpeed;
+            currentWallSlows += 1;
+            bonus.slowBonus -= 1;
+            bonus.slowText.text = "" + bonus.slowBonus;
+        }
+    }
+
+    public void RemoveRandomVertex()
+    {
+        BonusSelect bonus = bonusSelector.GetComponent<BonusSelect>();
+
+        if (bonus.removeBonus > 0 && currentPoly.verticesList.Count > wallPoly.verticesList.Count)
+        {
+            bool foundOne = false;
+            int i = 0;
+            Vector3 toCheck = new Vector3(0,0,0);
+            while (!foundOne)
+            {
+                //get a random vertex from player polygon
+                i = Random.Range(0, currentPoly.verticesList.Count);
+                toCheck = currentPoly.verticesList[i];
+                //if the target polygon doesn't have it, good to remove it from player polygon
+                if(!(wallPoly.verticesList.Exists(v => v.x == toCheck.x && v.y == toCheck.y)))
+                {
+                    RemovePlayerVertex(i);
+                    foundOne = true;
+                }
+                //if target polygon DOES have that vertex, we don't care, try to find another one to remove
+            }
+            bonus.removeBonus -= 1;
+            bonus.removeText.text = "" + bonus.removeBonus;
+        }
+    }
+
+    //everything involved in removing a vertex.
+    //removes it, updates the ui, and checks for successful match
+    public void RemovePlayerVertex(int removalIndex)
+    {
+        currentPoly.RemoveVertex(removalIndex);
+        
+        numToRemove -= 1;
+        UpdateRemoveText();
+        //if we've removed the correct amount and it matches, speed up wall to finish shape
+        if (numToRemove == 0)
+        {
+            TestPolygon hole = GameObject.Find("Wall").GetComponentInChildren<TestPolygon>();
+            bool success = VerticesAreSame(hole, currentPoly);
+            if (success)
+            {
+                GameObject.FindObjectOfType<Wall>().speedingup = true;
+            }
+        }
+    }
 
 	IEnumerator ChainAnimation(){
 		
@@ -512,6 +605,8 @@ public class GameManager : Manager {
 		chainText.transform.localScale = new Vector3 (1f, 1f, 1f);
 	}
 
+    // NEXT LEVEL
+
 	void GoToNextLevel(){
 		level += 1;
 		//loop back to level 1 after level 9
@@ -527,8 +622,13 @@ public class GameManager : Manager {
         polyRangeHigh = currentLevel.PolyRangeHigh;
         wallSpeed = currentLevel.WallSpeed;
         levelThreshold += currentLevel.NextLevelThreshold;
+
+        //destroy previous player poly(s) and instantiate correct number of new ones
+        numberOfShapes = currentLevel.NumberOfShapes;
+
         //numToRemove = currentLevel.BaseRemoveNum;
         //UpdateRemoveText();
+
 
         switch (level) {
 		case 0:
