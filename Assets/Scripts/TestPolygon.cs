@@ -27,6 +27,12 @@ public class TestPolygon : MonoBehaviour
     [SerializeField]
     public Transform markerParent;
 
+    [SerializeField]
+    public TestPolygon holeToMatch;
+
+    [SerializeField]
+    public int numToRemove;
+
     public void Awake()
     {
         removedStack = new Stack<IndexedVertex>();
@@ -70,7 +76,7 @@ public class TestPolygon : MonoBehaviour
 		}
 
         //set this stuff on start for the 'hole' polygon
-        if (gameObject.name != "PlayerPolygon")
+        if (transform.parent.name != "PlayerPolygon")
         {
             meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
 
@@ -154,6 +160,7 @@ public class TestPolygon : MonoBehaviour
         //gameObject.AddComponent<Outline> ();
         //GetComponent<Outline> ().enabled = false;
         //GetComponent<Outline> ().color = 1;
+        markerParent = transform;
     }
 
 	//remove vertex at index i
@@ -267,7 +274,7 @@ public class TestPolygon : MonoBehaviour
 		var meshRenderer = gameObject.GetComponent<MeshRenderer>();
 		meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
         //polygon player interacts with is slightly see-through
-        if (gameObject.name == "PlayerPolygon")
+        if (transform.parent.name == "PlayerPolygon")
         {
             Color myColor = meshRenderer.material.GetColor("_Color");
             myColor.a = .7f;
@@ -353,10 +360,13 @@ public class TestPolygon : MonoBehaviour
 
     void DrawMarkers()
     {
-        //clear all markers before drawing new set of markers
-        foreach (Transform markerTF in GameObject.Find("Markers").transform)
+        //clear all markers on this polygon before drawing new set of markers
+        foreach (Transform markerTF in markerParent)
         {
-            Destroy(markerTF.gameObject);
+            //make sure it is a marker, it will have a tag
+            //don't know what other children objects i might add in the future ugh
+            if(markerTF.gameObject.tag == "marker")
+                Destroy(markerTF.gameObject);
         }
         //draw a marker for each vertex
         foreach (Vector3 vert in verticesList)
@@ -367,6 +377,13 @@ public class TestPolygon : MonoBehaviour
             markerGO.transform.position = new Vector3(tpos.x + vert.x, tpos.y + vert.y, -0.1f);
             markerGO.GetComponent<RemovalMarker>().vert = vert;
         }
+    }
+
+    //takes a vertex defined in terms of local coordinates and 
+    //returns a vector3 which represents the vertex position in global coords
+    public Vector3 GetPositionAdjustedVert(Vector3 localVert)
+    {
+        return localVert + transform.localPosition;
     }
 }
 

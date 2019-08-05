@@ -8,6 +8,7 @@ TagManager:
   - MusicIntensity2
   - MusicIntensity3
   - MusicIntensity4
+  - marker
   layers:
   - Default
   - TransparentFX

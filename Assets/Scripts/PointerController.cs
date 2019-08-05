@@ -69,36 +69,42 @@ public class PointerController : MonoBehaviour{
             touching = true;
         }
 
-        foreach (Vector3 vert in polygonScript.verticesList)
+        foreach (TestPolygon tp in polygon.GetComponentsInChildren<TestPolygon>())
         {
-            //regular, touch control
-            if (touching && Vector3.Distance(touchposition, vert + new Vector3(wall.endPos.x, wall.endPos.y, 0f)) < .35f)
-            {
-                touching = true;
-                highlightedOne = true;
-                highlightGO.GetComponent<SpriteRenderer>().enabled = true;
-                highlightGO.GetComponent<HighlightVertex>().SetHighlightedVertex(vert);
-                highlightGO.GetComponent<HighlightVertex>().isHighlighting = true;
-                TryRemoveVertex();
-                //break out, can only remove 1 per update. also prevents concurrent modification of vertices list
-                break;
-            }
 
-            //mouse control for debugging in editor
-            if (mouseControlEnabled)
+            foreach (Vector3 vert in tp.verticesList)
             {
-                Vector3 mousePos = Input.mousePosition;
-                mousePos.z = zDepth;
-                mousePos = mainCam.ScreenToWorldPoint(mousePos);
-                //set this transform's position to the mouse's world position
-                //Debug.Log("MousePos:" + mousePos);
-                transform.position = mousePos;
-                if (Vector3.Distance(mousePos, vert + new Vector3(wall.endPos.x, wall.endPos.y, 0f)) < .35f)
+                Vector3 vertPositionAdjusted = tp.GetPositionAdjustedVert(vert);
+                //regular, touch control
+                if (touching && Vector3.Distance(touchposition, vertPositionAdjusted + new Vector3(wall.endPos.x, wall.endPos.y, 0f)) < .35f)
                 {
+                    touching = true;
                     highlightedOne = true;
                     highlightGO.GetComponent<SpriteRenderer>().enabled = true;
-                    highlightGO.GetComponent<HighlightVertex>().SetHighlightedVertex(vert);
+                    highlightGO.GetComponent<HighlightVertex>().SetHighlightedVertex(tp, vert);
                     highlightGO.GetComponent<HighlightVertex>().isHighlighting = true;
+                    TryRemoveVertex();
+                    //break out, can only remove 1 per update. also prevents concurrent modification of vertices list
+                    break;
+                }
+
+                //mouse control for debugging in editor
+                if (mouseControlEnabled)
+                {
+                    Vector3 mousePos = Input.mousePosition;
+                    mousePos.z = zDepth;
+                    mousePos = mainCam.ScreenToWorldPoint(mousePos);
+                    //set this transform's position to the mouse's world position
+                    //Debug.Log("MousePos:" + mousePos);
+                    transform.position = mousePos;
+                    if (Vector3.Distance(mousePos, vertPositionAdjusted + new Vector3(wall.endPos.x, wall.endPos.y, 0f)) < .35f)
+                    {
+                        
+                        highlightedOne = true;
+                        highlightGO.GetComponent<SpriteRenderer>().enabled = true;
+                        highlightGO.GetComponent<HighlightVertex>().SetHighlightedVertex(tp, vert);
+                        highlightGO.GetComponent<HighlightVertex>().isHighlighting = true;
+                    }
                 }
             }
         }
@@ -126,22 +132,34 @@ public class PointerController : MonoBehaviour{
             if (highlightedOne)
             {
                 Debug.Log("One definitely highlighted!");
-                if (polygonScript.verticesList.Count > 3)
+                TestPolygon highlightedPoly = highlightGO.GetComponent<HighlightVertex>().GetPolygon();
+                if (highlightedPoly.verticesList.Count > 3)
                 {
                     Debug.Log("vertices at least 3");
-                    polygonScript.RemoveVertex(highlightGO.GetComponent<HighlightVertex>().removalIndex);
+                    highlightedPoly.RemoveVertex(highlightGO.GetComponent<HighlightVertex>().removalIndex);
                     numRemoved += 1;
                     gm.numToRemove -= 1;
                     gm.UpdateRemoveText();
                     //if we've removed the correct amount and it matches, speed up wall to finish shape
                     if (gm.numToRemove == 0)
                     {
-                        TestPolygon hole = GameObject.Find("Wall").GetComponentInChildren<TestPolygon>();
-                        bool success = gm.VerticesAreSame(hole, polygonScript);
-                        if (success)
+                        bool success = false;
+                        //reworked so that it accounts for all holes
+                        foreach (TestPolygon tp in polygon.GetComponentsInChildren<TestPolygon>())
                         {
-                            GameObject.FindObjectOfType<Wall>().speedingup = true;
+                            TestPolygon hole = tp.holeToMatch;
+                            bool individualsuccess = gm.VerticesAreSame(hole, tp);
+                            if (!individualsuccess)
+                            {
+                                success = false;
+                                break;
+                            }
+                            success = true;
+
                         }
+                        //all checked were success, so speed up wall
+                        if(success)GameObject.FindObjectOfType<Wall>().speedingup = true;
+                        
                     }
                 }
 

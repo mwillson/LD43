@@ -47,7 +47,7 @@ public class Wall : MonoBehaviour {
 		}
 	}
 
-	public void CreateHoleShape(List<Vector3> vertices, int numToRemove){
+	public TestPolygon CreateHoleShape(List<Vector3> vertices, int numToRemove){
 		List<Vector3> listCopy = new List<Vector3> ();
 		listCopy.AddRange (vertices);
 		//remove as many verts as we need
@@ -55,12 +55,14 @@ public class Wall : MonoBehaviour {
 			listCopy.RemoveAt (UnityEngine.Random.Range (0, listCopy.Count));
 		}
 		GameObject newPoly = (GameObject)Instantiate (polygonPrefab, transform);
+        
 		newPoly.GetComponent<TestPolygon> ().verticesList = listCopy;
 		newPoly.GetComponent<TestPolygon>().vertices2D = System.Array.ConvertAll<Vector3, Vector2>(listCopy.ToArray(), v => v);
 		newPoly.GetComponent<TestPolygon> ().color = Color.black;
 		Debug.Log ("End hole polygon setup");
         gm.wallPoly = newPoly.GetComponent<TestPolygon>();
 		moving = true;
+        return newPoly.GetComponent<TestPolygon>();
 	}
 
 }

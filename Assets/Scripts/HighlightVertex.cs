@@ -11,7 +11,7 @@ public class HighlightVertex : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		polygon = GameObject.Find("PlayerPolygon").GetComponent<TestPolygon> ();	
+		//polygon = GameObject.Find("PlayerPolygon").GetComponent<TestPolygon> ();	
 	}
 	
 	// Update is called once per frame
@@ -19,7 +19,13 @@ public class HighlightVertex : MonoBehaviour {
 		
 	}
 
-	public void SetHighlightedVertex(Vector3 v){
-		removalIndex = polygon.verticesList.FindIndex (vec => vec.x == v.x && vec.y == v.y && vec.z == v.z);
-	}
+    public TestPolygon GetPolygon()
+    {
+        return polygon;
+    }
+
+	public void SetHighlightedVertex(TestPolygon whichPolygon, Vector3 v){
+        polygon = whichPolygon;
+		removalIndex = whichPolygon.verticesList.FindIndex (vec => vec.x == v.x && vec.y == v.y && vec.z == v.z);
+    }
 }

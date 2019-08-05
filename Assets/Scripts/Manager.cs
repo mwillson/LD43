@@ -6,7 +6,7 @@ public abstract class Manager : MonoBehaviour
 {
 
     //current player polygon(s)
-    List<TestPolygon> currentPolys;
+    protected List<TestPolygon> currentPolys, currentHoles;
 
     //prefab for player polygon
     public GameObject polyPrefab, GameOverUI;

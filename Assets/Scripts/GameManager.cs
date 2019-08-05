@@ -91,8 +91,6 @@ public class GameManager : Manager {
 		ScreenWatcher.AddOrientationChangeListener(OnOrientationChanged);
 		//Screen.orientation = ScreenOrientation.LandscapeLeft;
 		wall = GameObject.FindObjectOfType<Wall>();
-	
-		currentPoly = GameObject.Find ("PlayerPolygon").GetComponent<TestPolygon> ();
 
         cylinderOffsetProperty = "_DownTex";
         cylinderOffsetProp2 = "_DownTex2";
@@ -126,10 +124,10 @@ public class GameManager : Manager {
 		};
 		polygons.Add (new List<Vector3>(shape1));
 		Vector3[] shape2 = new Vector3[] { 
-			new Vector3 (0f, -1f, 0f),
 			new Vector3 (0f, 0f, 0f),
-			new Vector3 (2f, 1f, 0f),
-			new Vector3 (1f, -1f, 0f)
+			new Vector3 (1f, 2f, 0f),
+			new Vector3 (1f, 0f, 0f),
+			new Vector3 (0f, -1f, 0f)
 		};
 		polygons.Add (new List<Vector3>(shape2));
 		Vector3[] shape3 = new Vector3[] { 
@@ -140,10 +138,10 @@ public class GameManager : Manager {
 		};
 		polygons.Add (new List<Vector3>(shape3));
 		Vector3[] shape4 = new Vector3[] { 
-			new Vector3 (-1f, -1f, 0f),
-			new Vector3 (0f, 0f, 0f),
-			new Vector3 (1f, 0f, 0f),
-			new Vector3 (2f, -1f, 0f)
+			new Vector3 (-1f, 0f, 0f),
+			new Vector3 (-.5f, 1f, 0f),
+			new Vector3 (.5f, 1f, 0f),
+			new Vector3 (1f, 0f, 0f)
 		};
 
 		//5 sided
@@ -218,9 +216,16 @@ public class GameManager : Manager {
 			new Vector3(.5f,-.5f,0f)
 		};
 		polygons.Add (new List<Vector3>(shape12));
-		currentPoly.Setup ();
-		CreateNewPlayerPolygon ();
-		CreateHole ();
+        //currentPoly.Setup ();
+        currentPolys = new List<TestPolygon>();
+        CreateNewPlayerPolygons();
+        numToRemove = 0;
+        foreach (TestPolygon p in currentPolys)
+        {
+            numToRemove += p.numToRemove;
+        }
+        currentHoles = new List<TestPolygon>();
+		CreateHoles ();
 	}
 
 	void PositionForPortrait(){
@@ -229,8 +234,8 @@ public class GameManager : Manager {
 		Camera.main.fieldOfView = 120f;
 		Camera.main.transform.position = new Vector3 (1f, 2f, -3f);
 		wall.endPos = new Vector3 (1f, 2f, .08f);
-		//set player polygons position
-		currentPoly.transform.position = new Vector3 (1f, 2f, 0f);
+        //set player polygons position
+        GameObject.Find("PlayerPolygon").transform.position = new Vector3 (1f, 2f, 0f);
         infoText.GetComponent<RectTransform>().sizeDelta = new Vector2(mainCanvas.sizeDelta.x, 120f);
         infoText.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 70f);
     }
@@ -240,8 +245,8 @@ public class GameManager : Manager {
 		Camera.main.fieldOfView = 60f;
 		Camera.main.transform.position = new Vector3 (1f, 1f, -3f);
 		wall.endPos = new Vector3 (1f, 1f, .08f);
-		//set player polygons position
-		currentPoly.transform.position = new Vector3 (1f, 1f, 0f);
+        //set player polygons position
+        GameObject.Find("PlayerPolygon").transform.position = new Vector3 (1f, 1f, 0f);
         infoText.GetComponent<RectTransform>().sizeDelta = new Vector2(mainCanvas.sizeDelta.x, 50f);
         infoText.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 40f);
     }
@@ -315,11 +320,7 @@ public class GameManager : Manager {
 
 	}
 
-	public void CreateHole(){
-		if(GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> () != null)
-			Destroy (GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> ().gameObject);
-		GameObject.FindObjectOfType<Wall> ().CreateHoleShape (currentPoly.verticesList, numToRemove);
-	}
+
 
 	//handler for stuff to do when wall hits current player polygon
 	public override void WallCycle(){
@@ -341,18 +342,24 @@ public class GameManager : Manager {
 		GameObject.FindObjectOfType<Wall>().speed = wallSpeed;
 		GameObject.FindObjectOfType<Wall> ().speedingup = false;
 		pointerController.numRemoved = 0;
-        //should reset num to remove whether we fail or succeed after anim is done
-        numToRemove = currentLevel.BaseRemoveNum;
-        UpdateRemoveText();
 
 		animDone = false;
-		CreateNewPlayerPolygon ();
-		CreateHole ();
+		CreateNewPlayerPolygons();
+        //add the removal number values from each polygon to get teh total removal number
+        //has to happen after we create the player polygons
+        numToRemove = 0;
+        foreach(TestPolygon p in currentPolys)
+        {
+            numToRemove += p.numToRemove;
+        }
+        //should reset num to remove whether we fail or succeed after anim is done
+        UpdateRemoveText();
+        CreateHoles();
 	}
 
 	void CheckSuccess(){
-		TestPolygon hole = GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> ();
-		bool success = VerticesAreSame (hole, currentPoly);
+		//TestPolygon hole = GameObject.Find ("Wall").GetComponentInChildren<TestPolygon> ();
+        bool success = VerticesAreAllSame(currentPolys, currentHoles);
 		animDone = false;
 		if (success)
 			StartCoroutine (SuccessAnim ());
@@ -360,8 +367,23 @@ public class GameManager : Manager {
 			StartCoroutine (FailAnim ());
 	}
 
+    public bool VerticesAreAllSame(List<TestPolygon> polys, List<TestPolygon> holes)
+    {
+        bool retval = true;
+        for(int i = 0; i < polys.Count; i++)
+        {
+            Debug.Log("on hole" + i);
+            if (!VerticesAreSame(polys[i], holes[i])){
+            retval = false;
+            }
+        }
+        return retval;
+    }
+
 	public override bool VerticesAreSame (TestPolygon p1, TestPolygon p2){
 		bool result = true;
+        Debug.Log(p1.gameObject);
+        Debug.Log(p2.gameObject);
 		if (p1.verticesList.Count != p2.verticesList.Count) {
 			Debug.Log ("non-matching vertex count");
 			return false;
@@ -449,20 +471,27 @@ public class GameManager : Manager {
         {
             //UpdateRemoveText();
         }
-		
-		//outline the mesh
-		bool outEnab = true;
-		currentPoly.GetComponent<cakeslice.Outline>().enabled = true;
-		float i = 0f;
-		while (i < .6f) {
-			i += .05f;
-			outEnab = !outEnab;
-			currentPoly.GetComponent<cakeslice.Outline> ().enabled = outEnab;
-			yield return new WaitForSeconds (.05f);
-		}
 
-		currentPoly.GetComponent<cakeslice.Outline>().enabled = false;
+        //outline the mesh
+        foreach (TestPolygon currentPoly in currentPolys)
+        {
+            bool outEnab = true;
+            currentPoly.GetComponent<cakeslice.Outline>().enabled = true;
+            float i = 0f;
+            while (i < .6f)
+            {
+                i += .05f;
+                outEnab = !outEnab;
+                currentPoly.GetComponent<cakeslice.Outline>().enabled = outEnab;
+                yield return new WaitForSeconds(.05f);
+            }
+
+            currentPoly.GetComponent<cakeslice.Outline>().enabled = false;
+        }
+        //done flashing,
+        //destroy success sound object
 		Destroy (soundGO);
+        //move wall plane past camera so its like the player is "going through the wall"
         Vector3 wallEndPos = GameObject.Find("Main Camera").transform.position;
         while (wallPlane.parent.position.z > wallEndPos.z)
         {
@@ -540,42 +569,89 @@ public class GameManager : Manager {
     {
         BonusSelect bonus = bonusSelector.GetComponent<BonusSelect>();
 
-        if (bonus.removeBonus > 0 && currentPoly.verticesList.Count > wallPoly.verticesList.Count)
+        if (bonus.removeBonus > 0)
         {
-            bool foundOne = false;
-            int i = 0;
-            Vector3 toCheck = new Vector3(0,0,0);
-            while (!foundOne)
-            {
-                //get a random vertex from player polygon
-                i = Random.Range(0, currentPoly.verticesList.Count);
-                toCheck = currentPoly.verticesList[i];
-                //if the target polygon doesn't have it, good to remove it from player polygon
-                if(!(wallPoly.verticesList.Exists(v => v.x == toCheck.x && v.y == toCheck.y)))
+            //get the polygons in a random order
+            int[] randomInts = Shuffle(currentPolys.Count);
+            
+            foreach(int j in randomInts) {
+                //get a random polygon from player polygons
+                TestPolygon p = currentPolys[j];
+                //if it has more vertices than its corresponding hole, we shall remove one from it
+                if (p.verticesList.Count > p.holeToMatch.verticesList.Count)
                 {
-                    RemovePlayerVertex(i);
-                    foundOne = true;
+
+                    bool foundOne = false;
+                    int i = 0;
+                    Vector3 toCheck = new Vector3(0, 0, 0);
+                    while (!foundOne)
+                    {
+                        //get a random vertex from this player polygon
+                        i = Random.Range(0, p.verticesList.Count);
+                        toCheck = p.verticesList[i];
+                        //if the target polygon doesn't have it, good to remove it from player polygon
+                        if (!(p.holeToMatch.verticesList.Exists(v => v.x == toCheck.x && v.y == toCheck.y)))
+                        {
+                            RemovePlayerVertex(i, p);
+                            foundOne = true;
+                        }
+                        //if target polygon DOES have that vertex, we don't care, try to find another one to remove
+                    }
+                    bonus.removeBonus -= 1;
+                    bonus.removeText.text = "" + bonus.removeBonus;
+                    //we removed one, break from our loop looking for a candidate polygon
+                    break;
                 }
-                //if target polygon DOES have that vertex, we don't care, try to find another one to remove
             }
-            bonus.removeBonus -= 1;
-            bonus.removeText.text = "" + bonus.removeBonus;
         }
+    }
+
+    private static int[] Shuffle(int n)
+    {
+        var random = new System.Random();
+        var result = new int[n];
+        for (var i = 0; i < n; i++)
+        {
+            var j = random.Next(0, i + 1);
+            if (i != j)
+            {
+                result[i] = result[j];
+            }
+            result[j] = i;
+        }
+        return result;
     }
 
     //everything involved in removing a vertex.
     //removes it, updates the ui, and checks for successful match
-    public void RemovePlayerVertex(int removalIndex)
+    public void RemovePlayerVertex(int removalIndex, TestPolygon p)
     {
-        currentPoly.RemoveVertex(removalIndex);
+        p.RemoveVertex(removalIndex);
         
         numToRemove -= 1;
         UpdateRemoveText();
+
+        
         //if we've removed the correct amount and it matches, speed up wall to finish shape
         if (numToRemove == 0)
         {
-            TestPolygon hole = GameObject.Find("Wall").GetComponentInChildren<TestPolygon>();
-            bool success = VerticesAreSame(hole, currentPoly);
+            bool success = false;
+            Transform polygon = GameObject.Find("PlayerPolygon").transform;
+            //reworked so that it accounts for all holes
+            foreach (TestPolygon tp in polygon.GetComponentsInChildren<TestPolygon>())
+            {
+                TestPolygon hole = tp.holeToMatch;
+                bool individualsuccess = VerticesAreSame(hole, tp);
+                //if we failed one check, it is a total fail, so break from loop
+                if (!individualsuccess)
+                {
+                    success = false;
+                    break;
+                }
+                success = true;
+
+            }
+
             if (success)
             {
                 GameObject.FindObjectOfType<Wall>().speedingup = true;
@@ -620,9 +696,9 @@ public class GameManager : Manager {
         wallSpeed = currentLevel.WallSpeed;
         levelThreshold += currentLevel.NextLevelThreshold;
 
-        //destroy previous player poly(s) and instantiate correct number of new ones
+        //after this function completes, a new polygon or polygons will be created 
         numberOfShapes = currentLevel.NumberOfShapes;
-
+        
         //numToRemove = currentLevel.BaseRemoveNum;
         //UpdateRemoveText();
 
@@ -730,26 +806,31 @@ public class GameManager : Manager {
 		chainAmt = 0;
 		chainThreshold = 5;
 		chainText.text = "Chain: x0";
-		//animation
-		currentPoly.color = Color.grey;
-		currentPoly.ReDraw ();
-		GameObject.FindObjectOfType<CameraControl> ().ScreenShake (.2f, 0f, .06f);
-		while (cameraWait)
-			yield return null;
-		float i = 0f;
-		Vector3 originalPos = currentPoly.transform.position;
-		while (i < .1f) {
-			currentPoly.transform.position += new Vector3 (0f, .2f, 0f);
-			i += .04f;
-			yield return new WaitForSeconds (.02f);
-		}
-		i = 0f;
-		while (i < .4f) {
-			currentPoly.transform.position += new Vector3 (0f, -.4f, 0f);
-			i += .02f;
-			yield return new WaitForSeconds (.02f);
-		}
-		currentPoly.transform.position = originalPos;
+        //animation
+        foreach (TestPolygon playerPoly in currentPolys)
+        {
+            playerPoly.color = Color.grey;
+            playerPoly.ReDraw();
+            GameObject.FindObjectOfType<CameraControl>().ScreenShake(.2f, 0f, .06f);
+            while (cameraWait)
+                yield return null;
+            float i = 0f;
+            Vector3 originalPos = playerPoly.transform.position;
+            while (i < .1f)
+            {
+                playerPoly.transform.position += new Vector3(0f, .2f, 0f);
+                i += .04f;
+                yield return new WaitForSeconds(.02f);
+            }
+            i = 0f;
+            while (i < .4f)
+            {
+                playerPoly.transform.position += new Vector3(0f, -.4f, 0f);
+                i += .02f;
+                yield return new WaitForSeconds(.02f);
+            }
+            playerPoly.transform.position = originalPos;
+        }
 		Destroy (failSoundGO);
 		animDone = true;
 	}
@@ -867,16 +948,59 @@ public class GameManager : Manager {
         infoText.GetComponent<UnityEngine.UI.Outline>().effectColor = outlineColor;
     }
 
-	public void CreateNewPlayerPolygon(){
+	public void CreateNewPlayerPolygons(){
+
+        Transform polygonParent = GameObject.Find("PlayerPolygon").transform;
         //remove the current removal markers
-        foreach(Transform marker in GameObject.Find("Markers").transform)
+        //this needs to account for markers on multiple polygon objects
+        foreach (GameObject marker in GameObject.FindGameObjectsWithTag("marker"))
         {
-            Destroy(marker.gameObject);
+            Destroy(marker);
         }
 
-		//newVerts needs to be a new List of vertices, copied from the list in memory
-		//polyRangeHigh should never exceed polygons.count
-		List<Vector3> newVerts = new List<Vector3>(polygons[Random.Range(polyRangeLow,polyRangeHigh)]);
+        //create as many new polygons as the current level dictates
+        //first, clear the currentPoly's list and destroy the objects that exist for them already
+        if(currentPolys.Count > 0)
+        {
+            foreach(TestPolygon playerPolygon in polygonParent.GetComponentsInChildren<TestPolygon>())
+            {
+                Destroy(playerPolygon.gameObject);
+            }
+            currentPolys.Clear();
+        }
+        for (int i = 0; i < currentLevel.NumberOfShapes; i++)
+        {
+            //create a polygon
+            
+            TestPolygon newPolygon = ((GameObject)Instantiate(polyPrefab, polygonParent)).GetComponent<TestPolygon>();
+            newPolygon.Setup();
+            //different positioning for different number of shapes
+            //special case for the third element in a 3 shape setup
+            if(currentLevel.NumberOfShapes == 3)
+            {
+                if(i == 2)
+                    newPolygon.transform.localPosition = new Vector3(0f, .5f, 0f);
+                else
+                    newPolygon.transform.localPosition = new Vector3(-1.2f + i * 2.4f, -1.8f, 0f);
+
+            }
+            else
+            {
+                newPolygon.transform.localPosition = new Vector3(-1.2f + i * 2.4f, 0f, 0f);
+            }
+            
+            //newVerts needs to be a new List of vertices, copied from the list in memory
+            //polyRangeHigh should never exceed polygons.count
+            List<Vector3> newVerts = new List<Vector3>(polygons[Random.Range(polyRangeLow, polyRangeHigh)]);
+            newPolygon.verticesList = newVerts;
+            //THIS LINE WILL CHANGE WHEN DIFFERENT REMOVAL NUMS FOR DIFFERENT POLYGONS IS A THING
+            newPolygon.numToRemove = currentLevel.BaseRemoveNum;
+            newPolygon.ResetRemovedStack();
+            newPolygon.vertices2D = System.Array.ConvertAll<Vector3, Vector2>(newVerts.ToArray(), v => v);
+            newPolygon.color = playerPolyColors[UnityEngine.Random.Range(0, playerPolyColors.Length)];
+            newPolygon.OutlineFadeInEffect();
+            currentPolys.Add(newPolygon);
+        }
 
 		// PROCEDURAL POLYGON GENERATION //
 		// MAY WORK ON IN FUTURE VERSION //
@@ -905,16 +1029,53 @@ public class GameManager : Manager {
 			newVerts.Add (newVert);
 			Debug.Log ("new Vert added: " + newVert);
 		}*/
-		currentPoly.verticesList = newVerts;
-		currentPoly.ResetRemovedStack ();
-		currentPoly.vertices2D = System.Array.ConvertAll<Vector3, Vector2>(newVerts.ToArray(), v => v);
-		currentPoly.color = playerPolyColors[UnityEngine.Random.Range(0,playerPolyColors.Length)];
-        currentPoly.OutlineFadeInEffect();
+		
 		//currentPoly.ReDraw ();
-		Debug.Log ("Done creating player polygon, verts:" + newVerts.Count);
+		Debug.Log ("Done creating player polygons");
 	}
 
-	public void OnOrientationChanged(){
+    public void CreateHoles()
+    {
+
+        //if there is at least one hole object
+        //destroy all hole objects and clear the current holes list
+        if (currentHoles.Count != 0)
+        {
+            foreach (TestPolygon hole in GameObject.Find("Wall").GetComponentsInChildren<TestPolygon>())
+            {
+                Destroy(hole.gameObject);
+            }
+            currentHoles.Clear();
+        }
+        //create any new holes to be associated with the new player polygons
+        int i = 0;
+        foreach (TestPolygon playerPoly in currentPolys)
+        {
+            TestPolygon newHolePolygon = GameObject.FindObjectOfType<Wall>().CreateHoleShape(playerPoly.verticesList, currentLevel.BaseRemoveNum);
+            //different positioning for different number of shapes
+            //special case for the third element in a 3 shape setup
+            if (currentLevel.NumberOfShapes == 3)
+            {
+                if (i == 2)
+                    newHolePolygon.transform.localPosition = new Vector3(0f, .5f, 0f);
+                else
+                    newHolePolygon.transform.localPosition = new Vector3(-1.2f + i * 2.4f, -1.8f, 0f);
+
+            }
+            else
+            {
+                newHolePolygon.transform.localPosition = new Vector3(-1.2f + i * 2.4f, 0f, 0f);
+            }
+
+            //newHolePolygon.transform.localPosition = new Vector3(-1f + i * 2f, 0f, 0f);
+            currentHoles.Add(newHolePolygon);
+            //make sure the player polygon has a reference to it's approaching "hole"
+            playerPoly.holeToMatch = newHolePolygon;
+            i += 1;
+        }
+    }
+
+    public void OnOrientationChanged(){
 		Debug.Log ("Orientation changed!");
 		if (Screen.orientation == ScreenOrientation.Landscape) {
 			GameObject.FindObjectOfType<Wall> ().startPos = new Vector3 (-3f, 0f, 10f);
