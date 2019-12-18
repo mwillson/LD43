@@ -1,0 +1,38 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+
+public class CasualGameMenu : MonoBehaviour
+{
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    public void Highlight(Text text)
+    {
+        
+        text.color = new Color(text.color.r, text.color.g, text.color.b, 1);
+        foreach(Text t in text.GetComponentsInChildren<Text>()){
+            t.color = new Color(t.color.r, t.color.g, t.color.b, 1);
+
+        }
+    }
+
+    public void DeHighlight(Text text)
+    {
+
+        text.color = new Color(text.color.r, text.color.g, text.color.b, .5f);
+        foreach (Text t in text.GetComponentsInChildren<Text>()){
+            t.color = new Color(t.color.r, t.color.g, t.color.b, .5f);
+        }
+    }
+}

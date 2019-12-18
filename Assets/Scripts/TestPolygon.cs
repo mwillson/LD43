@@ -76,7 +76,7 @@ public class TestPolygon : MonoBehaviour
 		}
 
         //set this stuff on start for the 'hole' polygon
-        if (transform.parent.name != "PlayerPolygon")
+        if (transform.parent != null && transform.parent.name != "PlayerPolygon")
         {
             meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
 
@@ -178,10 +178,18 @@ public class TestPolygon : MonoBehaviour
             }
         }
 
-		removedStack.Push (new IndexedVertex (vertCopy, i));
+		//removedStack.Push (new IndexedVertex (vertCopy, i));
 		verticesList.RemoveAt (i);
 		ReDraw ();
 	}
+
+    public IndexedVertex GetIndexedVertex(int i)
+    {
+        Debug.Log("i:" + i);
+        Debug.Log(verticesList.Count);
+        Vector3 vertCopy = new Vector3(verticesList[i].x, verticesList[i].y, verticesList[i].z);
+        return new IndexedVertex(vertCopy, i);
+    }
 
 	public void ResetRemovedStack(){
 		removedStack.Clear ();
@@ -274,7 +282,7 @@ public class TestPolygon : MonoBehaviour
 		var meshRenderer = gameObject.GetComponent<MeshRenderer>();
 		meshRenderer.material = new Material(Shader.Find("Sprites/Default"));
         //polygon player interacts with is slightly see-through
-        if (transform.parent.name == "PlayerPolygon")
+        if (transform.parent != null && transform.parent.name == "PlayerPolygon")
         {
             Color myColor = meshRenderer.material.GetColor("_Color");
             myColor.a = .7f;
@@ -286,7 +294,7 @@ public class TestPolygon : MonoBehaviour
         var filter = gameObject.GetComponent<MeshFilter>();
 		filter.mesh = mesh;
 
-        DrawMarkers();
+        if(transform.parent != null) DrawMarkers();
 	}
 
     //check all sets of 3 vertices to see if they form a line

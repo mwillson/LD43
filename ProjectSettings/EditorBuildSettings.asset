@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/casual.unity
     guid: 68159b01ae9d87c49b976bb06a244087
+  - enabled: 0
+    path: Assets/Scenes/trailer_jig.unity
+    guid: 2c5eb815430e4b04d889c3cd15399130
   m_configObjects: {}

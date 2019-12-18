@@ -21,6 +21,8 @@ public class PointerController : MonoBehaviour{
 
     public bool mouseControlEnabled;
 
+    public Stack<PolygonVertexPair> removedVertices;
+
 	// Use this for initialization
 	void Start () {
 		polygon = GameObject.Find ("PlayerPolygon").transform;
@@ -28,6 +30,7 @@ public class PointerController : MonoBehaviour{
 		polygonScript = polygon.GetComponent<TestPolygon>();
 		highlightGO = transform.Find ("Highlighter").gameObject;
 		highlightedOne = false;
+        removedVertices = new Stack<PolygonVertexPair>();
 
         if (SceneManager.GetActiveScene().name == "casual")
             gm = GameObject.FindObjectOfType<CasualGameManager>();
@@ -101,7 +104,7 @@ public class PointerController : MonoBehaviour{
                     {
                         
                         highlightedOne = true;
-                        highlightGO.GetComponent<SpriteRenderer>().enabled = true;
+                        //highlightGO.GetComponent<SpriteRenderer>().enabled = true;
                         highlightGO.GetComponent<HighlightVertex>().SetHighlightedVertex(tp, vert);
                         highlightGO.GetComponent<HighlightVertex>().isHighlighting = true;
                     }
@@ -136,7 +139,12 @@ public class PointerController : MonoBehaviour{
                 if (highlightedPoly.verticesList.Count > 3)
                 {
                     Debug.Log("vertices at least 3");
-                    highlightedPoly.RemoveVertex(highlightGO.GetComponent<HighlightVertex>().removalIndex);
+                    int removeIndex = highlightGO.GetComponent<HighlightVertex>().removalIndex;
+                    IndexedVertex indVert = highlightedPoly.GetIndexedVertex(removeIndex);
+                    highlightedPoly.RemoveVertex(removeIndex);
+                    //add removal info to the stack
+                    removedVertices.Push(new PolygonVertexPair(highlightedPoly, indVert));
+
                     numRemoved += 1;
                     gm.numToRemove -= 1;
                     gm.UpdateRemoveText();
@@ -172,7 +180,12 @@ public class PointerController : MonoBehaviour{
         if (polygonScript.verticesList.Count > 3)
         {
             Debug.Log("vertices at least 3");
-            polygonScript.RemoveVertex(highlightGO.GetComponent<HighlightVertex>().removalIndex);
+            int removeIndex = highlightGO.GetComponent<HighlightVertex>().removalIndex;
+            IndexedVertex indVert = polygonScript.GetIndexedVertex(removeIndex);
+            polygonScript.RemoveVertex(removeIndex);
+            //add removal info to the stack
+            removedVertices.Push(new PolygonVertexPair(polygonScript, indVert));
+
             numRemoved += 1;
             gm.numToRemove -= 1;
             gm.UpdateRemoveText();
@@ -190,13 +203,31 @@ public class PointerController : MonoBehaviour{
     }
 
 	void UndoLastMove(){
-		if (polygonScript.removedStack.Count > 0) {
-			IndexedVertex toReplace = polygonScript.removedStack.Pop ();
-			polygonScript.verticesList.Insert (toReplace.index, toReplace.coords);
-			polygonScript.ReDraw ();
+		if (removedVertices.Count > 0) {
+            PolygonVertexPair toReplace = removedVertices.Pop();
+            TestPolygon toAddTo = toReplace.poly;
+			IndexedVertex vertToAdd = toReplace.vertex;
+            Debug.Log("toaddto " + toAddTo);
+            Debug.Log("vertoAdd " + vertToAdd);
+            Debug.Log("vertices list? " + toAddTo.verticesList);
+
+            toAddTo.verticesList.Insert (vertToAdd.index, vertToAdd.coords);
+			toAddTo.ReDraw ();
             gm.numToRemove += 1;
             gm.UpdateRemoveText();
         }
 	}
 		
+}
+
+public struct PolygonVertexPair
+{
+    public TestPolygon poly;
+    public IndexedVertex vertex;
+
+    public PolygonVertexPair(TestPolygon p, IndexedVertex v)
+    {
+        poly = p;
+        vertex = v;
+    }
 }

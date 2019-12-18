@@ -719,9 +719,8 @@ public class GameManager : Manager {
 		case 2:
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
-                
-			//levelThreshold += 5;
-			break;
+                //levelThreshold += 5;
+                break;
 		case 3:
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
@@ -744,7 +743,7 @@ public class GameManager : Manager {
 			infoText.text = "\nRemove Multiple\nVertices !";
 
                 //levelThreshold += 10;
-                GoToNextWorld(3);
+                //GoToNextWorld(3);
 			GameObject musicTrigger3 = (GameObject)Instantiate (Intense3, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger3, 1f);
 			break;
@@ -995,16 +994,16 @@ public class GameManager : Manager {
             newPolygon.verticesList = newVerts;
             //THIS LINE WILL CHANGE WHEN DIFFERENT REMOVAL NUMS FOR DIFFERENT POLYGONS IS A THING
             newPolygon.numToRemove = currentLevel.BaseRemoveNum;
-            newPolygon.ResetRemovedStack();
+            
             newPolygon.vertices2D = System.Array.ConvertAll<Vector3, Vector2>(newVerts.ToArray(), v => v);
             newPolygon.color = playerPolyColors[UnityEngine.Random.Range(0, playerPolyColors.Length)];
             newPolygon.OutlineFadeInEffect();
             currentPolys.Add(newPolygon);
         }
 
-		// PROCEDURAL POLYGON GENERATION //
-		// MAY WORK ON IN FUTURE VERSION //
-		/*List<XYPair> confirmedVerts = new List<XYPair> ();
+        // PROCEDURAL POLYGON GENERATION //
+        // MAY WORK ON IN FUTURE VERSION //
+        /*List<XYPair> confirmedVerts = new List<XYPair> ();
 		//generate 'numVerts' number of unique vertices for polygon
 		for (int i = 0; i < numVerts; i++) {
 			int xVal = -1, yVal = -1;
@@ -1029,9 +1028,10 @@ public class GameManager : Manager {
 			newVerts.Add (newVert);
 			Debug.Log ("new Vert added: " + newVert);
 		}*/
-		
-		//currentPoly.ReDraw ();
-		Debug.Log ("Done creating player polygons");
+
+        //currentPoly.ReDraw ();
+        pointerController.removedVertices.Clear();
+        Debug.Log ("Done creating player polygons");
 	}
 
     public void CreateHoles()
