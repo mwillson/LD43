@@ -10,7 +10,7 @@ public class TrailerPushInJig : MonoBehaviour
 
     public Color[] playerPolyColors;
 
-    public float loopTicker, prevLoopTicker, loopRate = 2f;
+    public float loopTicker, prevLoopTicker, loopRate = 2f, yPos, startingXPos, endXPos;
 
     // Start is called before the first frame update
     void Start()
@@ -137,12 +137,12 @@ public class TrailerPushInJig : MonoBehaviour
 
     IEnumerator PushIn()
     {
-        float xPos = 4f;
-        while (xPos > 0f)
+        float xPos = startingXPos;
+        while (xPos > endXPos)
         {
             xPos += -.01f;
             loopRate -= .003f;
-            thePolygon.transform.position = new Vector3(xPos, .8f, 0f);
+            thePolygon.transform.position = new Vector3(xPos, yPos, 0f);
             yield return null;
         }
         while (loopRate > 0f) { 

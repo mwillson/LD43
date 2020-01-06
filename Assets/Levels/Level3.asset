@@ -19,4 +19,4 @@ MonoBehaviour:
   polyRangeLow: 0
   polyRangeHigh: 8
   nextLevelThreshold: 2
-  numberOfShapes: 3
+  numberOfShapes: 1
