@@ -1444,6 +1444,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selectedGameType: {fileID: 0}
+  customParams: {fileID: 1785541885}
 --- !u!1 &1291551054
 GameObject:
   m_ObjectHideFlags: 0
@@ -1522,7 +1523,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1291551057}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1275266598}
+        m_MethodName: StartGame
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &1291551057
@@ -1681,6 +1693,7 @@ MonoBehaviour:
   sidesLowText: {fileID: 4856858657449166006}
   sidesHighText: {fileID: 2100820257}
   maxRemovalsText: {fileID: 782719326}
+  active: 0
 --- !u!4 &1785541886
 Transform:
   m_ObjectHideFlags: 0

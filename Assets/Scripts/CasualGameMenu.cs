@@ -9,7 +9,7 @@ public class CasualGameMenu : MonoBehaviour
 
     public Transform selectedGameType;
 
-    CustomGameParams customParams;
+    public CustomGameParams customParams;
 
     // Start is called before the first frame update
     void Start()

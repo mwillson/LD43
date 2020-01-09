@@ -66,8 +66,21 @@ public class GameManager : Manager {
     string cylinderOffsetProperty, cylinderOffsetProp2;
     bool twoOffsetProps;
 
-	// Use this for initialization
-	void Start () {
+    public GameType gameType;
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "scene1") gameType = GameType.Arcade;
+    }
+
+    // Use this for initialization
+    void Start () {
+
 		score = 0;
         failCounter = 0;
 		chainAmt = 0;
@@ -216,6 +229,10 @@ public class GameManager : Manager {
 			new Vector3(.5f,-.5f,0f)
 		};
 		polygons.Add (new List<Vector3>(shape12));
+
+        //create custom polygons list if custom game
+        if (gameType == GameType.CasualCustom) CreateCustomParamsLevel(GameObject.FindObjectOfType<CustomGameParams>());
+
         //currentPoly.Setup ();
         currentPolys = new List<TestPolygon>();
         CreateNewPlayerPolygons();
@@ -228,7 +245,35 @@ public class GameManager : Manager {
 		CreateHoles ();
 	}
 
-	void PositionForPortrait(){
+    void CreateCustomParamsLevel(CustomGameParams gameParams)
+    {
+        //re-build list of polygons to use correct-sided ones
+        List<List<Vector3>> newPolys = new List<List<Vector3>>();
+        foreach (List<Vector3> poly in polygons)
+        {
+            if(poly.Count >= gameParams.sidesLow && poly.Count <= gameParams.sidesHigh)
+            {
+                newPolys.Add(poly);
+            }
+        }
+        polygons = newPolys;
+        //create 10 levels, TODO: change level-looping structure so it can be arbitrary amount!!
+        for (int i = 0; i < 10; i++)
+        {
+            LevelSpec customParamsLevel = new LevelSpec();
+            customParamsLevel.NumberOfShapes = gameParams.shapes;
+            customParamsLevel.BaseRemoveNum = gameParams.maxRemovals;
+            customParamsLevel.LevelNum = i;
+            customParamsLevel.WallSpeed = .05f;
+            customParamsLevel.BeatsPerSecond = 2f;
+            customParamsLevel.PolyRangeLow = 0;
+            customParamsLevel.PolyRangeHigh = polygons.Count - 1;
+            customParamsLevel.NextLevelThreshold = 5;
+            levels[i] = customParamsLevel;
+        }
+    }
+
+    void PositionForPortrait(){
 		Debug.Log ("portrait mode!!!");
 		wall.startPos = new Vector3 (1f, 0f, 10f);
 		Camera.main.fieldOfView = 120f;
@@ -265,11 +310,17 @@ public class GameManager : Manager {
         {
             RenderSettings.skybox.SetTextureOffset(cylinderOffsetProp2, new Vector2(0f, skyboxOffset));
         }
-        if (currHealth != newHealth) {
-			currHealth = Mathf.Lerp (currHealth, newHealth, t);
-			healthBar.fillAmount = currHealth;
-			t += .5f * Time.deltaTime; 
-		}
+
+        //lerp health down if taken 'damage' in arcade mode
+        if (gameType == GameType.Arcade)
+        {
+            if (currHealth != newHealth)
+            {
+                currHealth = Mathf.Lerp(currHealth, newHealth, t);
+                healthBar.fillAmount = currHealth;
+                t += .5f * Time.deltaTime;
+            }
+        }
         //shortcut to main menu
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -795,16 +846,21 @@ public class GameManager : Manager {
 		Debug.Log ("Fail");
 		//play sound
 		GameObject failSoundGO = Instantiate(FailSoundPrefab);
-		//scoring
-		HealthDrop (-.34f);
-        failCounter += 1;
-        if(failCounter == 2)
+
+        //scoring
+        //only done in arcade mode
+        if (gameType == GameType.Arcade)
         {
-            infoText.text = "Two finger tap to Undo";
+            HealthDrop(-.34f);
+            failCounter += 1;
+            if (failCounter == 2)
+            {
+                infoText.text = "Two finger tap to Undo";
+            }
+            chainAmt = 0;
+            chainThreshold = 5;
+            chainText.text = "Chain: x0";
         }
-		chainAmt = 0;
-		chainThreshold = 5;
-		chainText.text = "Chain: x0";
         //animation
         foreach (TestPolygon playerPoly in currentPolys)
         {
@@ -1110,4 +1166,11 @@ public struct XYPair{
 		x = p1;
 		y = p2;
 	}
+}
+
+public enum GameType
+{
+    Arcade,
+    CasualStandard,
+    CasualCustom
 }

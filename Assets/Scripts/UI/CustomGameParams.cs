@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class CustomGameParams : MonoBehaviour
 {
@@ -36,9 +37,16 @@ public class CustomGameParams : MonoBehaviour
         NumberSelector.onNumberChanged += ChangeParams;
     }
 
+    private void OnEnable()
+    {
+        Debug.LogError("on enable custom params");
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
     private void OnDisable()
     {
         NumberSelector.onNumberChanged -= ChangeParams;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     // Update is called once per frame
@@ -54,5 +62,13 @@ public class CustomGameParams : MonoBehaviour
         sidesLow = int.Parse(sidesLowText.text);
         sidesHigh = int.Parse(sidesHighText.text);
         maxRemovals = int.Parse(maxRemovalsText.text);
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        Debug.Log("OnSceneLoaded: " + scene.name);
+        GameManager gm = GameObject.FindObjectOfType<GameManager>();
+        if (active) gm.gameType = GameType.CasualCustom;
+        else gm.gameType = GameType.CasualStandard;
     }
 }
