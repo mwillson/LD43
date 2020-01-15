@@ -25,7 +25,7 @@ public class GameManager : Manager {
 
 	bool animDone;
 
-	float bps = 2.33f;
+	float bps = 2f;
 	float prevBeatTime = 0f, beatTime;
 	bool smallBeat;
 
@@ -53,7 +53,7 @@ public class GameManager : Manager {
     public int chainThreshold, numberOfShapes;
 
 	[SerializeField]
-	public GameObject SuccessSoundPrefab, FailSoundPrefab, Intense1, Intense2, Intense3, Intense4, pointerControllerGO;
+	public GameObject SuccessSoundPrefab, FailSoundPrefab, Intense1, Intense2, Intense3, Intense4, World3MusicTrigger, pointerControllerGO;
 
 	AudioSource audiosource;
 	[SerializeField]
@@ -67,6 +67,8 @@ public class GameManager : Manager {
     bool twoOffsetProps;
 
     public GameType gameType;
+
+    BonusSelect bs;
 
     private void OnEnable()
     {
@@ -104,6 +106,7 @@ public class GameManager : Manager {
 		ScreenWatcher.AddOrientationChangeListener(OnOrientationChanged);
 		//Screen.orientation = ScreenOrientation.LandscapeLeft;
 		wall = GameObject.FindObjectOfType<Wall>();
+        bs = bonusSelector.GetComponent<BonusSelect>();
 
         cylinderOffsetProperty = "_DownTex";
         cylinderOffsetProp2 = "_DownTex2";
@@ -345,23 +348,50 @@ public class GameManager : Manager {
         ChangeTexture1(world1Texture);
     }
     void FixedUpdate(){
-        if (paused) return;
-		//1 divided by beats per second gives me roughly how often i should 'do a beat'
-		//mod time by that and every time it loops back to 0, 'do the beat'
-		beatTime = Time.time % (1f/bps);
-		if (beatTime <= prevBeatTime) {
-			StartCoroutine (DoBeat ());
-		}
-		prevBeatTime = beatTime;
+        beatTime = Time.time % (1f / bps);
+        if (paused)
+        {
+            //Debug.Log("paused!");
+            if (beatTime <= prevBeatTime)
+            {
+                StartCoroutine(DoTextBeat());
+            }
+            prevBeatTime = beatTime;
+            return;
+        }
+        else
+        {
+            if (beatTime <= prevBeatTime)
+            {
+                StartCoroutine(DoWallBeat());
+            }
+            prevBeatTime = beatTime;
+        }	
 	}
 
-	IEnumerator DoBeat(){
+	IEnumerator DoWallBeat(){
 		if (!smallBeat) {
+            //wall pulse
 			wallPlane.localScale = new Vector3 (.8f, .8f, .8f);
+            //bonus selection text pulse
+            if (bonusSelector.activeSelf)
+            {
+                bs.healthText.fontSize = 22;
+                bs.removeText.fontSize = 22;
+                bs.slowText.fontSize = 22;
+            }
 			yield return new WaitForSeconds (.1f);
 		} else {
+            //wall pulse
 			wallPlane.localScale = new Vector3 (.68f, .68f, .68f);
-			yield return new WaitForSeconds (.08f);
+            //bonus selection text pulse
+            if (bonusSelector.activeSelf)
+            {
+                bs.healthText.fontSize = 18;
+                bs.removeText.fontSize = 18;
+                bs.slowText.fontSize = 18;
+            }
+            yield return new WaitForSeconds (.08f);
 		}
 		smallBeat = !smallBeat;
 		while (wallPlane.localScale != new Vector3 (.6f, .6f, .6f)) {
@@ -370,6 +400,32 @@ public class GameManager : Manager {
 		}
 
 	}
+    IEnumerator DoTextBeat()
+    {
+        if (!smallBeat)
+        {
+            //bonus selection text pulse
+            if (bonusSelector.activeSelf)
+            {
+                bs.transform.Find("Health").GetComponent<Text>().fontSize = 22;
+                bs.transform.Find("Removal").GetComponent<Text>().fontSize = 18;
+                bs.transform.Find("Slow").GetComponent<Text>().fontSize = 22;
+            }
+            yield return new WaitForSeconds(.1f);
+        }
+        else
+        { 
+            //bonus selection text pulse
+            if (bonusSelector.activeSelf)
+            {
+                bs.transform.Find("Health").GetComponent<Text>().fontSize = 18;
+                bs.transform.Find("Removal").GetComponent<Text>().fontSize = 22;
+                bs.transform.Find("Slow").GetComponent<Text>().fontSize = 18;
+            }
+            yield return new WaitForSeconds(.08f);
+        }
+        smallBeat = !smallBeat;
+    }
 
 
 
@@ -762,14 +818,15 @@ public class GameManager : Manager {
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
 			//removeText.gameObject.SetActive (true);
-			GameObject musicTrigger1 = (GameObject)Instantiate (Intense1, new Vector3 (0f, 0f, 0f), Quaternion.identity);
-			Destroy (musicTrigger1, 1f);
+			
 			break;
 		case 2:
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
-                //levelThreshold += 5;
-                break;
+            GameObject musicTrigger1 = (GameObject)Instantiate(Intense2, new Vector3(0f, 0f, 0f), Quaternion.identity);
+            Destroy(musicTrigger1, 1f);
+            //levelThreshold += 5;
+            break;
 		case 3:
 			wallText.fontSize = 40;
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
@@ -779,8 +836,9 @@ public class GameManager : Manager {
 			wallText.transform.localPosition = new Vector3 (-2.6f, 2.5f, 0);
 			//levelThreshold += 5;
                 GoToNextWorld(2);
-                GameObject musicTrigger2 = (GameObject)Instantiate (Intense2, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+                GameObject musicTrigger2 = (GameObject)Instantiate (World3MusicTrigger, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger2, 1f);
+                bps = 2.33f;
 			break;
 		case 5:
 			wallText.fontSize = 40;
@@ -793,7 +851,7 @@ public class GameManager : Manager {
 
                 //levelThreshold += 10;
                 //GoToNextWorld(3);
-			GameObject musicTrigger3 = (GameObject)Instantiate (Intense3, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			GameObject musicTrigger3 = (GameObject)Instantiate (Intense2, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger3, 1f);
 			break;
 		case 7:
@@ -802,17 +860,17 @@ public class GameManager : Manager {
 			//levelThreshold += 20;
 			break;
 		case 8:
-			GameObject musicTrigger4 = (GameObject)Instantiate (Intense4, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			GameObject musicTrigger4 = (GameObject)Instantiate (Intense3, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger4, 1f);
 			//levelThreshold += 20;
 			break;
 		case 9:
-			GameObject musicTrigger5 = (GameObject)Instantiate (Intense2, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			GameObject musicTrigger5 = (GameObject)Instantiate (Intense4, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger5, 1f);
 			//levelThreshold += 20;
 			break;
 		case 10:
-			GameObject musicTrigger6 = (GameObject)Instantiate (Intense4, new Vector3 (0f, 0f, 0f), Quaternion.identity);
+			GameObject musicTrigger6 = (GameObject)Instantiate (Intense2, new Vector3 (0f, 0f, 0f), Quaternion.identity);
 			Destroy (musicTrigger6, 1f);
 			//levelThreshold += 50;
 			break;

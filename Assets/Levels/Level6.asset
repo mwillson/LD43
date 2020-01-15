@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Level6
   m_EditorClassIdentifier: 
   levelNum: 6
-  baseRemoveNum: 2
+  baseRemoveNum: 1
   wallSpeed: 0.04
   bps: 2.33
-  polyRangeLow: 4
-  polyRangeHigh: 8
+  polyRangeLow: 0
+  polyRangeHigh: 4
   nextLevelThreshold: 10
   numberOfShapes: 2

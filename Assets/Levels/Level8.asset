@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelNum: 8
   baseRemoveNum: 2
-  wallSpeed: 0.08
+  wallSpeed: 0.04
   bps: 2.33
   polyRangeLow: 4
-  polyRangeHigh: 8
+  polyRangeHigh: 12
   nextLevelThreshold: 20
   numberOfShapes: 2

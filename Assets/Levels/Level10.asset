@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Level10
   m_EditorClassIdentifier: 
   levelNum: 10
-  baseRemoveNum: 2
+  baseRemoveNum: 4
   wallSpeed: 0.1
   bps: 2.33
   polyRangeLow: 4

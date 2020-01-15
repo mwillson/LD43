@@ -65,6 +65,7 @@ public class PointerController : MonoBehaviour{
             //pos.x = (pos.x - width) / width;
             //pos.y = (pos.y - height) / height;
             touchposition = mainCam.ScreenToWorldPoint(new Vector3(pos.x, pos.y, zDepth));
+            transform.position = touchposition;
             Debug.Log("touchpos:" + touchposition);
             touching = true;
         }
@@ -83,7 +84,7 @@ public class PointerController : MonoBehaviour{
                     highlightGO.GetComponent<SpriteRenderer>().enabled = true;
                     highlightGO.GetComponent<HighlightVertex>().SetHighlightedVertex(tp, vert);
                     highlightGO.GetComponent<HighlightVertex>().isHighlighting = true;
-                    TryRemoveVertex();
+                    TryRemoveVertex(tp);
                     //break out, can only remove 1 per update. also prevents concurrent modification of vertices list
                     break;
                 }
@@ -169,16 +170,16 @@ public class PointerController : MonoBehaviour{
         }
 	}
 
-    void TryRemoveVertex()
+    void TryRemoveVertex(TestPolygon tp)
     {
-        if (polygonScript.verticesList.Count > 3)
+        if (tp.verticesList.Count > 3)
         {
             Debug.Log("vertices at least 3");
             int removeIndex = highlightGO.GetComponent<HighlightVertex>().removalIndex;
-            IndexedVertex indVert = polygonScript.GetIndexedVertex(removeIndex);
-            polygonScript.RemoveVertex(removeIndex);
+            IndexedVertex indVert = tp.GetIndexedVertex(removeIndex);
+            tp.RemoveVertex(removeIndex);
             //add removal info to the stack
-            removedVertices.Push(new PolygonVertexPair(polygonScript, indVert));
+            removedVertices.Push(new PolygonVertexPair(tp, indVert));
 
             numRemoved += 1;
             gm.numToRemove -= 1;
@@ -186,8 +187,20 @@ public class PointerController : MonoBehaviour{
             //if we've removed all and it matches, speed up wall to finish shape
             if (gm.numToRemove == 0)
             {
-                TestPolygon hole = GameObject.Find("Wall").GetComponentInChildren<TestPolygon>();
-                bool success = gm.VerticesAreSame(hole, polygonScript);
+                bool success = false;
+                //reworked so that it accounts for all holes
+                foreach (TestPolygon p in polygon.GetComponentsInChildren<TestPolygon>())
+                {
+                    TestPolygon hole = p.holeToMatch;
+                    bool individualsuccess = gm.VerticesAreSame(hole, p);
+                    if (!individualsuccess)
+                    {
+                        success = false;
+                        break;
+                    }
+                    success = true;
+
+                }
                 if (success)
                 {
                     GameObject.FindObjectOfType<Wall>().speedingup = true;

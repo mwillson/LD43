@@ -15,8 +15,8 @@ MonoBehaviour:
   levelNum: 3
   baseRemoveNum: 1
   wallSpeed: 0.05
-  bps: 2.33
+  bps: 2
   polyRangeLow: 0
   polyRangeHigh: 8
-  nextLevelThreshold: 2
+  nextLevelThreshold: 5
   numberOfShapes: 1

@@ -9,6 +9,7 @@ TagManager:
   - MusicIntensity3
   - MusicIntensity4
   - marker
+  - world3
   layers:
   - Default
   - TransparentFX
