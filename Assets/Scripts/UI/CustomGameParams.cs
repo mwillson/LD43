@@ -39,7 +39,6 @@ public class CustomGameParams : MonoBehaviour
 
     private void OnEnable()
     {
-        Debug.LogError("on enable custom params");
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
@@ -66,9 +65,25 @@ public class CustomGameParams : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log("OnSceneLoaded: " + scene.name);
-        GameManager gm = GameObject.FindObjectOfType<GameManager>();
-        if (active) gm.gameType = GameType.CasualCustom;
-        else gm.gameType = GameType.CasualStandard;
+
+
+        if (scene.name == "casual" || scene.name == "scene1")
+        {
+            GameManager gm = GameObject.FindObjectOfType<GameManager>();
+            if (active) gm.gameType = GameType.CasualCustom;
+            else gm.gameType = GameType.CasualStandard;
+        }
+        else if(scene.name == "casualmenu")
+        {
+            shapesText = GameObject.Find("numshapes").transform.Find("NumSelector").Find("NumText").GetComponent<Text>();
+            sidesLowText = GameObject.Find("sideslow").transform.Find("NumSelector").Find("NumText").GetComponent<Text>();
+            sidesHighText = GameObject.Find("sideshigh").transform.Find("NumSelector").Find("NumText").GetComponent<Text>();
+            maxRemovalsText = GameObject.Find("removalsper").transform.Find("NumSelector").Find("NumText").GetComponent<Text>();
+
+            shapes = 1;
+            sidesLow = 4;
+            sidesHigh = 4;
+            maxRemovals = 1;
+        }
     }
 }

@@ -50,7 +50,7 @@ Material:
     - _DownTex:
         m_Texture: {fileID: 2800000, guid: 50f2e4d326fcfc8458d656a1c86d4082, type: 3}
         m_Scale: {x: 1, y: 0.5}
-        m_Offset: {x: 0, y: 0.6649938}
+        m_Offset: {x: 0, y: 0.39999405}
     - _DownTex2:
         m_Texture: {fileID: 2800000, guid: 7ac319f306caa684da597ba9006f8925, type: 3}
         m_Scale: {x: 1, y: 0.5}

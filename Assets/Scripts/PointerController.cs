@@ -32,10 +32,7 @@ public class PointerController : MonoBehaviour{
 		highlightedOne = false;
         removedVertices = new Stack<PolygonVertexPair>();
 
-        if (SceneManager.GetActiveScene().name == "casual")
-            gm = GameObject.FindObjectOfType<CasualGameManager>();
-        else
-            gm = GameObject.FindObjectOfType<GameManager>();
+        gm = GameObject.FindObjectOfType<GameManager>();
         
 		numRemoved = 0;
 		wall = GameObject.FindObjectOfType<Wall> ();
@@ -131,14 +128,11 @@ public class PointerController : MonoBehaviour{
         {
             //if highlighter is highlighting something
             //remove the vertex its highlighting
-            Debug.Log("Mouse clicked down");
             if (highlightedOne)
             {
-                Debug.Log("One definitely highlighted!");
                 TestPolygon highlightedPoly = highlightGO.GetComponent<HighlightVertex>().GetPolygon();
                 if (highlightedPoly.verticesList.Count > 3)
                 {
-                    Debug.Log("vertices at least 3");
                     int removeIndex = highlightGO.GetComponent<HighlightVertex>().removalIndex;
                     IndexedVertex indVert = highlightedPoly.GetIndexedVertex(removeIndex);
                     highlightedPoly.RemoveVertex(removeIndex);

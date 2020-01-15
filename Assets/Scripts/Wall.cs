@@ -59,7 +59,7 @@ public class Wall : MonoBehaviour {
 		newPoly.GetComponent<TestPolygon> ().verticesList = listCopy;
 		newPoly.GetComponent<TestPolygon>().vertices2D = System.Array.ConvertAll<Vector3, Vector2>(listCopy.ToArray(), v => v);
 		newPoly.GetComponent<TestPolygon> ().color = Color.black;
-		Debug.Log ("End hole polygon setup");
+
         gm.wallPoly = newPoly.GetComponent<TestPolygon>();
 		moving = true;
         return newPoly.GetComponent<TestPolygon>();

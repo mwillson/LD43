@@ -17,7 +17,6 @@ public class MenuPolygon : MonoBehaviour
 
 	private void Start () {
 
-		Debug.Log ("polygon start");
 		var vertices3D = System.Array.ConvertAll<Vector2, Vector3>(vertices2D, v => v);
 
 		verticesList = new List<Vector3> (vertices3D);
@@ -71,7 +70,7 @@ public class MenuPolygon : MonoBehaviour
 	}
 
 	public void Setup(){
-		Debug.Log ("polygon start");
+
 		var vertices3D = System.Array.ConvertAll<Vector2, Vector3>(vertices2D, v => v);
 
 		verticesList = new List<Vector3> (vertices3D);

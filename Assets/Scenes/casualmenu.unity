@@ -1746,8 +1746,8 @@ MonoBehaviour:
   thePolygon: {fileID: 2076738634}
   shapeVectorList: []
   playerPolyColors:
-  - {r: 1, g: 1, b: 0.14509805, a: 0.5372549}
-  - {r: 0, g: 0.9310894, b: 1, a: 0.53333336}
+  - {r: 1, g: 1, b: 0.14509805, a: 0.35686275}
+  - {r: 0, g: 0.9310894, b: 1, a: 0.3372549}
 --- !u!4 &1840704196
 Transform:
   m_ObjectHideFlags: 0

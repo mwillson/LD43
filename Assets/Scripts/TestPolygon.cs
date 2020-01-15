@@ -40,7 +40,6 @@ public class TestPolygon : MonoBehaviour
 
 	private void Start () {
 
-		Debug.Log ("polygon start");
 		var vertices3D = System.Array.ConvertAll<Vector2, Vector3>(vertices2D, v => v);
 
 		verticesList = new List<Vector3> (vertices3D);
@@ -108,7 +107,7 @@ public class TestPolygon : MonoBehaviour
 	}
 		
 	public void Setup(){
-		Debug.Log ("polygon start");
+
 		var vertices3D = System.Array.ConvertAll<Vector2, Vector3>(vertices2D, v => v);
 
 		verticesList = new List<Vector3> (vertices3D);
@@ -166,13 +165,12 @@ public class TestPolygon : MonoBehaviour
 	//remove vertex at index i
 	public void RemoveVertex(int i){
         Vector3 vertCopy = new Vector3(verticesList[i].x, verticesList[i].y, verticesList[i].z);
-        Debug.Log("removing vert");
+
         foreach (Transform markerTF in GameObject.Find("Markers").transform)
         {
             Vector3 mvert = markerTF.GetComponent<RemovalMarker>().vert;
             if (mvert.x == vertCopy.x && mvert.y == vertCopy.y)
             {
-                Debug.Log("found matching marker!");
                 Destroy(markerTF.gameObject);
                 break;
             }
@@ -185,8 +183,6 @@ public class TestPolygon : MonoBehaviour
 
     public IndexedVertex GetIndexedVertex(int i)
     {
-        Debug.Log("i:" + i);
-        Debug.Log(verticesList.Count);
         Vector3 vertCopy = new Vector3(verticesList[i].x, verticesList[i].y, verticesList[i].z);
         return new IndexedVertex(vertCopy, i);
     }

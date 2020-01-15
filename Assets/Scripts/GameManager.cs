@@ -260,7 +260,7 @@ public class GameManager : Manager {
         //create 10 levels, TODO: change level-looping structure so it can be arbitrary amount!!
         for (int i = 0; i < 10; i++)
         {
-            LevelSpec customParamsLevel = new LevelSpec();
+            LevelSpec customParamsLevel = ScriptableObject.CreateInstance<LevelSpec>();
             customParamsLevel.NumberOfShapes = gameParams.shapes;
             customParamsLevel.BaseRemoveNum = gameParams.maxRemovals;
             customParamsLevel.LevelNum = i;
@@ -381,6 +381,7 @@ public class GameManager : Manager {
 	IEnumerator SuccessFail(){
 		CheckSuccess ();
 
+        //wait for success/fail animation to complete
 		while (!animDone)
 			yield return null;
         if (currentWallSlows > 0)
@@ -423,7 +424,7 @@ public class GameManager : Manager {
         bool retval = true;
         for(int i = 0; i < polys.Count; i++)
         {
-            Debug.Log("on hole" + i);
+           
             if (!VerticesAreSame(polys[i], holes[i])){
             retval = false;
             }
@@ -433,10 +434,9 @@ public class GameManager : Manager {
 
 	public override bool VerticesAreSame (TestPolygon p1, TestPolygon p2){
 		bool result = true;
-        Debug.Log(p1.gameObject);
-        Debug.Log(p2.gameObject);
+
+        //if vertices count is not the same, the vertices definitely can not be the same
 		if (p1.verticesList.Count != p2.verticesList.Count) {
-			Debug.Log ("non-matching vertex count");
 			return false;
 		}
 		/*int i = 0;
@@ -500,7 +500,6 @@ public class GameManager : Manager {
 			break;
 		}
 		scoreText.text = "Score: " + score;
-		Debug.Log ("Success! Score:" + score);
 
 		chainAmt += 1;
 		if (chainAmt == chainThreshold) {
@@ -547,7 +546,6 @@ public class GameManager : Manager {
         while (wallPlane.parent.position.z > wallEndPos.z)
         {
             wallPlane.parent.position = Vector3.MoveTowards(wallPlane.parent.position, wallEndPos, .25f);
-            Debug.Log(wallPlane.parent.position + ", end?" + wallEndPos);
             yield return null;
         }
 		animDone = true;
@@ -1048,8 +1046,11 @@ public class GameManager : Manager {
             //polyRangeHigh should never exceed polygons.count
             List<Vector3> newVerts = new List<Vector3>(polygons[Random.Range(polyRangeLow, polyRangeHigh)]);
             newPolygon.verticesList = newVerts;
-            //THIS LINE WILL CHANGE WHEN DIFFERENT REMOVAL NUMS FOR DIFFERENT POLYGONS IS A THING
-            newPolygon.numToRemove = currentLevel.BaseRemoveNum;
+
+            //base the number to remove on the base maximum and also how many vertices exist in the new shape
+            int maxCanRemove = newPolygon.verticesList.Count - 3;
+            newPolygon.numToRemove = Mathf.Clamp(Random.Range(1, maxCanRemove + 1), 1, currentLevel.BaseRemoveNum);
+
             
             newPolygon.vertices2D = System.Array.ConvertAll<Vector3, Vector2>(newVerts.ToArray(), v => v);
             newPolygon.color = playerPolyColors[UnityEngine.Random.Range(0, playerPolyColors.Length)];
@@ -1087,7 +1088,6 @@ public class GameManager : Manager {
 
         //currentPoly.ReDraw ();
         pointerController.removedVertices.Clear();
-        Debug.Log ("Done creating player polygons");
 	}
 
     public void CreateHoles()
@@ -1107,7 +1107,7 @@ public class GameManager : Manager {
         int i = 0;
         foreach (TestPolygon playerPoly in currentPolys)
         {
-            TestPolygon newHolePolygon = GameObject.FindObjectOfType<Wall>().CreateHoleShape(playerPoly.verticesList, currentLevel.BaseRemoveNum);
+            TestPolygon newHolePolygon = GameObject.FindObjectOfType<Wall>().CreateHoleShape(playerPoly.verticesList, playerPoly.numToRemove);
             //different positioning for different number of shapes
             //special case for the third element in a 3 shape setup
             if (currentLevel.NumberOfShapes == 3)
